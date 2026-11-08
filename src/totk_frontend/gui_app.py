@@ -25,6 +25,27 @@ from .validate import SEVERITY_LABELS, Severity
 __all__ = ["run"]
 
 
+def _enable_dpi_awareness() -> bool:
+    """在 Windows 上请求 Per-Monitor DPI 感知，避免 125%/150% 缩放下界面发虚。
+
+    这是可选的优化：非 Windows 平台、缺少 ctypes 或调用被系统拒绝时静默跳过，
+    不影响窗口创建（不引入对 Windows API 的硬依赖）。
+    """
+    try:
+        import ctypes
+    except ImportError:  # pragma: no cover - 标准库始终存在
+        return False
+    try:
+        # Windows 10 1703+ 优先使用 Per-Monitor V2；失败再退回进程级 DPI 感知。
+        if hasattr(ctypes.windll.shcore, "SetProcessDpiAwareness"):
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
+            return True
+        ctypes.windll.user32.SetProcessDPIAware()
+        return True
+    except Exception:
+        return False
+
+
 def run(tk, args: argparse.Namespace) -> int:  # noqa: ANN001 - tkinter 模块
     from tkinter import filedialog, messagebox, ttk
 
@@ -355,6 +376,7 @@ def run(tk, args: argparse.Namespace) -> int:  # noqa: ANN001 - tkinter 模块
         def run(self) -> None:
             self.root.mainloop()
 
+    _enable_dpi_awareness()
     try:
         app = Application()
     except tk.TclError as exc:  # 有 tkinter 但没有可用显示（例如无头服务器）

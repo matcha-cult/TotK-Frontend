@@ -199,4 +199,6 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 | M5 | 保存前用 `session.errors()` 做整份校验；`bind_*` 只读、由游戏内 F1 菜单管理 | 与 CLI 结果一致 |
 | M6 | 关闭窗口或切换安装目录时，若有未保存修改先确认 | 避免误丢改动 |
 | M7 | 无 tkinter 时 `main` 返回 1 并提示 CLI 命令；有 tkinter 但无显示时捕获 `TclError` 给出同样提示 | 实机验收前无法在本开发机验证窗口 |
+| M9 | Windows 上启动时尽力开启 Per-Monitor DPI 感知（`ctypes` + `try/except`），失败静默跳过 | 不引入对 Windows API 的硬依赖；非 Windows 平台无影响 |
+| M10 | Python 3.14 自带的 Tk 9.0 与 Python 3.11 的 Tk 8.6 都支持；仅使用 `ttk` 标准控件 | 实机验收记录两套 Tk 的显示差异 |
 | M8 | `gui_app.py` 从无头覆盖率统计中排除，原因与范围记录在 I8 | 窗口代码无法在无头环境执行 |
