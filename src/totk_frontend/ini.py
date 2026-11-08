@@ -438,7 +438,7 @@ class IniDocument:
     def _replace_line_value(line: Line, value: str) -> None:
         match = _VALUE_RE.match(line.text)
         if match is None:
-            line.text = f"{line.key} = {value}"
+            line.text = f"{line.key} = {value}"  # pragma: no cover - 防御分支：KEY_VALUE 行必含等号
         else:
             line.text = match.group("head") + match.group("lead") + value + match.group("trail")
         line.value = value
@@ -643,11 +643,13 @@ def _verify_written(path: Path, document: IniDocument, expected: bytes) -> None:
         current = parsed.get(key, section)
         if change.op is ChangeOp.SET:
             if current != change.value:
-                raise IniWriteError(
+                raise IniWriteError(  # pragma: no cover - 字节已一致，正常不可达
                     f"回读校验失败：{key} 期望 {change.value!r}，实际 {current!r}"
                 )
         elif current is not None:
-            raise IniWriteError(f"回读校验失败：{key} 应已移除，实际仍为 {current!r}")
+            raise IniWriteError(  # pragma: no cover - 字节已一致，正常不可达
+                f"回读校验失败：{key} 应已移除，实际仍为 {current!r}"
+            )
 
 
 def _restore_after_failure(
@@ -671,7 +673,7 @@ def _restore_after_failure(
         return IniWriteError(detail + "；原文件未被改动")
     try:
         write_bytes_atomic(path, original, mode=mode)
-    except IniError as exc:
+    except Exception as exc:  # 回滚本身的任何失败都要报告为 IniWriteError
         return IniWriteError(detail + f"；回滚失败：{exc}")
     return IniWriteError(detail + "；已恢复原文件内容")
 

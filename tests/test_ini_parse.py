@@ -167,5 +167,32 @@ class ParseTest(unittest.TestCase):
         self.assertEqual(lf.newline, "\n")
 
 
+
+class ParseEdgeCaseTest(unittest.TestCase):
+    def test_from_text_accepts_leading_bom_character(self) -> None:
+        doc = IniDocument.from_text("\ufeff[fps]\nfps_limit = 60\n")
+        self.assertTrue(doc.bom)
+        self.assertEqual(doc.get("fps_limit"), "60")
+        self.assertTrue(doc.render().startswith("\ufeff"))
+
+    def test_from_text_requires_string(self) -> None:
+        with self.assertRaises(TypeError):
+            IniDocument.from_text(123)  # type: ignore[arg-type]
+
+    def test_from_bytes_requires_bytes(self) -> None:
+        with self.assertRaises(TypeError):
+            IniDocument.from_bytes("fps_limit = 60")  # type: ignore[arg-type]
+
+    def test_invalid_key_line_is_other(self) -> None:
+        text = "not a key = 1\n"
+        doc = IniDocument.from_text(text)
+        self.assertEqual(doc.lines[0].kind, LineKind.OTHER)
+        self.assertEqual(doc.render(), text)
+
+    def test_get_requires_string_section(self) -> None:
+        doc = IniDocument.from_text("[a]\nx = 1\n")
+        with self.assertRaises(TypeError):
+            doc.get("x", 1)  # type: ignore[arg-type]
+
 if __name__ == "__main__":
     unittest.main()

@@ -78,10 +78,10 @@ def _error(code: str, setting: Setting, key: str, message: str, suggestion: str 
 
 
 def _suggestion_for(setting: Setting) -> str:
-    if setting.range_doc:
-        return f"参考取值：{setting.range_doc}"
     if setting.choices:
         return "允许值：" + "、".join(setting.choices)
+    if setting.range_doc:
+        return f"参考取值：{setting.range_doc}"
     return ""
 
 
@@ -94,7 +94,7 @@ def _check_choice(setting: Setting, key: str, text: str, choices: tuple[str, ...
         setting,
         key,
         f"{setting.label_with_key} 的取值“{text}”不在允许值内。",
-        "允许值：" + "、".join(choices),
+        _suggestion_for(setting),
     )
 
 
@@ -227,8 +227,6 @@ def validate_value(setting: Setting, value: str, *, key: str | None = None) -> l
         return [issue] if issue is not None else []
 
     if value_type is ValueType.ENUM:
-        if setting.allow_empty and text == "":
-            return []
         issue = _check_choice(setting, used_key, text, setting.choices)
         return [issue] if issue is not None else []
 

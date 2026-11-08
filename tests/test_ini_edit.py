@@ -222,5 +222,20 @@ class UnsetTest(unittest.TestCase):
         self.assertEqual(doc.render(), "[a]\n")
 
 
+
+class DocumentHelpersTest(unittest.TestCase):
+    def test_len_and_repr(self) -> None:
+        doc = IniDocument.from_text("[a]\nx = 1\n")
+        self.assertEqual(len(doc), 2)
+        self.assertIn("IniDocument", repr(doc))
+        self.assertIn("lines=2", repr(doc))
+
+    def test_set_creates_key_in_requested_section_only(self) -> None:
+        doc = IniDocument.from_text("[a]\nx = 1\n\n[b]\ny = 2\n")
+        doc.set("x", "9", "b")
+        self.assertEqual(doc.get("x", "a"), "1")
+        self.assertEqual(doc.get("x", "b"), "9")
+        self.assertEqual(doc.get("x"), "9")
+
 if __name__ == "__main__":
     unittest.main()

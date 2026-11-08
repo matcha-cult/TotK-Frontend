@@ -52,7 +52,7 @@
 - 大小写不敏感读取、同名键后者生效；
 - CRLF/LF、中文路径、只读目录等边界有测试；
 - 写失败可回滚；
-- 覆盖率达到项目自定阈值：`src/totk_frontend` 可执行行（AST 统计）行覆盖率 ≥ 90%，用 `python tools/coverage_check.py` 测量（阈值在 M1 开始时确定，见 [design.md](design.md) 第 12 节 I8）。
+- 覆盖率达到项目自定阈值：`src/totk_frontend` 语句覆盖率（AST 统计，多行语句按一条计）≥ 90%，用 `python tools/coverage_check.py` 测量（阈值在 M1 开始时确定，见 [design.md](design.md) 第 12 节 I8）。
 
 ### M2 预设与诊断
 

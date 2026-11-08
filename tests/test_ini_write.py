@@ -288,5 +288,50 @@ class ReadOnlyDirectoryTest(WriteTestBase):
         self.assertEqual(self.list_backups(), [])
 
 
+
+class WriterEdgeCaseTest(WriteTestBase):
+    def test_create_backup_requires_existing_file(self) -> None:
+        from totk_frontend.ini import create_backup
+
+        with self.assertRaises(IniWriteError):
+            create_backup(self.path, clock=fixed_clock)
+
+    def test_write_to_directory_path_fails(self) -> None:
+        directory = self.dir / "totk.ini"
+        directory.mkdir()
+        doc = IniDocument.from_text("[a]\na = 1\n")
+        with self.assertRaises(IniWriteError):
+            write_ini(directory, doc, clock=fixed_clock)
+
+    def test_write_bytes_atomic_requires_bytes(self) -> None:
+        from totk_frontend.ini import write_bytes_atomic
+
+        with self.assertRaises(TypeError):
+            write_bytes_atomic(self.path, "text")  # type: ignore[arg-type]
+
+    def test_restore_failure_is_reported(self) -> None:
+        from totk_frontend import ini as ini_module
+
+        original = b"[fps]\nfps_limit = 60\n"
+        self.path.write_bytes(original)
+        doc = IniDocument.from_path(self.path)
+        doc.set("fps_limit", "120")
+        real_write = ini_module.write_bytes_atomic
+        calls = {"count": 0}
+
+        def flaky_write(path, data, *, mode=None):  # noqa: ANN001
+            calls["count"] += 1
+            if calls["count"] == 1:
+                real_write(path, data, mode=mode)
+            else:
+                raise OSError("模拟回滚失败")
+
+        with mock.patch("totk_frontend.ini.write_bytes_atomic", side_effect=flaky_write), mock.patch(
+            "totk_frontend.ini._read_back", return_value=b"corrupted"
+        ):
+            with self.assertRaises(IniWriteError) as caught:
+                write_ini(self.path, doc, clock=fixed_clock)
+        self.assertIn("回滚失败", str(caught.exception))
+
 if __name__ == "__main__":
     unittest.main()

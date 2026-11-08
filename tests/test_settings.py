@@ -288,5 +288,29 @@ class LookupTest(unittest.TestCase):
         )
 
 
+
+class SettingHelpersTest(unittest.TestCase):
+    def test_effect_label_and_label_with_key(self) -> None:
+        from totk_frontend.settings import EFFECT_LABELS
+
+        setting = get_setting("realtime")
+        assert setting is not None
+        self.assertEqual(setting.effect_label, EFFECT_LABELS[setting.effect])
+        self.assertEqual(setting.label_with_key, "游戏速度跟随真实时钟（realtime）")
+
+    def test_supports_version(self) -> None:
+        fov = get_setting("fov")
+        assert fov is not None
+        self.assertTrue(fov.supports_version("1.4.3"))
+        self.assertFalse(fov.supports_version("1.1.0"))
+        self.assertTrue(fov.supports_version(None))
+        realtime = get_setting("realtime")
+        assert realtime is not None
+        self.assertTrue(realtime.supports_version("1.1.0"))
+
+    def test_get_setting_requires_string(self) -> None:
+        with self.assertRaises(TypeError):
+            get_setting(123)  # type: ignore[arg-type]
+
 if __name__ == "__main__":
     unittest.main()

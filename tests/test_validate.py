@@ -275,5 +275,52 @@ class HelperTest(unittest.TestCase):
         self.assertFalse(is_16_9(0, 0))
 
 
+
+class ValidationEdgeCaseTest(unittest.TestCase):
+    def test_issue_str_and_severity_labels(self) -> None:
+        issue = Issue(Severity.WARNING, "x.y", "示例")
+        self.assertEqual(str(issue), "[警告] 示例")
+
+    def test_validate_value_requires_string(self) -> None:
+        with self.assertRaises(TypeError):
+            validate_value(setting("volume"), 100)  # type: ignore[arg-type]
+
+    def test_binding_with_only_separators(self) -> None:
+        binding = setting("bind_A")
+        self.assertEqual(codes(validate_value(binding, ",", key="bind_a")), ["value.binding"])
+
+    def test_number_extra_choice_and_non_finite(self) -> None:
+        from totk_frontend.settings import Effect, Priority, Setting, ValueType
+
+        custom = Setting(
+            section="test",
+            key="custom",
+            value_type=ValueType.NUMBER,
+            default=None,
+            label="测试项",
+            description="",
+            effect=Effect.IMMEDIATE,
+            priority=Priority.P2,
+            extra_choices=("auto",),
+        )
+        self.assertEqual(validate_value(custom, "auto"), [])
+        self.assertEqual(codes(validate_value(setting("color_gamma"), "1e999")), ["value.type"])
+
+    def test_enum_suggestion_lists_choices(self) -> None:
+        issues = validate_value(setting("operation_mode"), "docked ")
+        self.assertEqual(issues, [])
+        invalid = validate_value(setting("operation_mode"), "tabletop")
+        self.assertEqual(codes(invalid), ["value.choice"])
+        self.assertIn("docked", invalid[0].suggestion)
+
+    def test_parse_resolution_non_string(self) -> None:
+        self.assertIsNone(parse_resolution(None))  # type: ignore[arg-type]
+        self.assertIsNone(parse_resolution(1920))  # type: ignore[arg-type]
+
+    def test_version_check_skips_absent_restricted_keys(self) -> None:
+        doc = make_doc("[display]\nfov = 110\n")
+        issues = validate_document(doc, version="1.2.1")
+        self.assertEqual(codes(issues), ["rule.version_unsupported"])
+
 if __name__ == "__main__":
     unittest.main()
