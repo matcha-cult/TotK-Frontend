@@ -2,7 +2,7 @@
 
 [简体中文](README.md)
 
-> Status: **scaffolding stage (M0)**. No feature code yet; this stage only establishes repository rules, documentation, task tracking and the development plan.
+> Status: **M1 complete**. The core library (`totk.ini` parsing/writing, settings registry, validation) is in place with unit tests; later milestones are in [docs/plan.md](docs/plan.md).
 
 TotK Frontend is a **PC-style launcher and configuration front end** for [TotK Recomp](https://github.com/valentderah/totk-pc-recomp), the static recompilation of *The Legend of Zelda: Tears of the Kingdom* for PC. Its product shape follows the *Savage Wind Configuration* screen of [Savage Wind Recomp](https://github.com/Revivedx/SavageWindRecomp) (the BotW project): launch, video / audio / controls / mouse settings, presets, game-file guidance and log viewing before entering the game, so players rarely need to edit `totk.ini` by hand.
 
@@ -29,6 +29,9 @@ Classification rules and the pre-commit checklist are in [docs/DOC-POLICY.md](do
 .
 ├── README.md / README.en.md   # bilingual documentation (workspace rule)
 ├── AGENTS.md                  # collaboration and AI-agent rules
+├── src/totk_frontend/         # core library (ini parsing/writing, settings registry, validation)
+├── tests/                     # headless unit tests and hand-written synthetic fixtures
+├── tools/coverage_check.py    # statement-coverage check (stdlib only)
 ├── docs/                      # public documentation (committable)
 │   ├── DOC-POLICY.md           # documentation tiers and commit checklist
 │   ├── design.md               # product and technical design
@@ -43,8 +46,9 @@ Classification rules and the pre-commit checklist are in [docs/DOC-POLICY.md](do
 
 ## Progress
 
-- M0: scaffolding and rules — in progress (see [docs/tracking.md](docs/tracking.md))
-- From M1: core library, presets, CLI, GUI, install guidance, packaging (see [docs/plan.md](docs/plan.md))
+- M0: scaffolding and rules — done
+- M1: core library (totk.ini parsing/writing, settings registry, validation, unit tests) — done
+- From M2: presets and doctor, CLI, GUI, install guidance, packaging (see [docs/plan.md](docs/plan.md))
 
 ## Reference projects
 
