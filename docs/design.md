@@ -1,6 +1,6 @@
 # 设计（design）
 
-> 状态：M1 已完成，独立审查修正中（`M1-T6`）；M0 的架构与契约不变，M1 的实现约定见第 12 节，核心库接口见第 13 节。实现细节在对应里程碑中细化，变更须同步 `plan.md` 与 `tracking.md`。
+> 状态：M1 已完成（含独立审查修正）；M0 的架构与契约不变，M1 的实现约定见第 12 节，核心库接口见第 13 节。实现细节在对应里程碑中细化，变更须同步 `plan.md` 与 `tracking.md`。
 
 ## 1. 背景
 
@@ -141,5 +141,5 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 | `validate` | `Issue`、`Severity`、`validate_value`、`validate_document`、`effective_value`、`parse_resolution`、`is_16_9` | 单键与跨字段校验；只读；依赖本机环境的两条规则需调用方传入检测结果 |
 
 验证命令：`python -m unittest discover -s tests -v`、`python -m compileall src`、`python tools/coverage_check.py`
-（语句覆盖率阈值 90%，M1 验收时为 99.32%）。M2 的 `presets` 只能使用注册表中的键，`doctor` 复用
+（语句覆盖率阈值 90%，M1 验收时为 99.07%）。M2 的 `presets` 只能使用注册表中的键，`doctor` 复用
 `validate` 的稳定规则码（`rule.*`、`value.*`）。

@@ -21,10 +21,10 @@
 
 ## 当前状态
 
-- M0（脚手架与文档）与 M1（核心库）已完成，验收记录见 `docs/tracking.md`。
+- M0（脚手架与文档）与 M1（核心库，含独立审查修正）已完成，验收记录见 `docs/tracking.md`。
 - 已有代码：`src/totk_frontend/ini.py`（解析 + 安全写入）、`settings.py`（注册表）、`validate.py`（校验）；
   `tests/` 全部为无头测试（`tests/_bootstrap.py` 负责把 `src/` 加入导入路径）；
-  `tools/coverage_check.py` 统计语句覆盖率（阈值 90%）。
+  `tools/coverage_check.py` 统计语句覆盖率（阈值 90%，测试失败时同样返回非 0）。
 - M1 可复用接口见 `docs/design.md` 第 13 节；写 `totk.ini` 一律走 `ini.write_ini`，不要自己实现写盘。
 - M2 尚未开始；`presets.py`、`doctor` 规则表需要新建。
 

@@ -17,7 +17,7 @@
 | 里程碑 | 状态 | 进入下一阶段的条件 |
 |---|---|---|
 | M0 | `DONE` | 全部 M0 任务 `DONE`，初始提交已推送 |
-| M1 | `DOING` | M0 完成；独立审查修正完成后恢复 `DONE` |
+| M1 | `DONE` | M0 完成；独立审查修正（`M1-T6`）已完成 |
 | M2 | `TODO` | M1 完成 |
 | M3 | `TODO` | M2 完成 |
 | M4 | `TODO` | M3 完成 |
@@ -44,8 +44,8 @@
 | M1-T2 | 写入器（备份、原子写、只改目标行、回滚） | `DONE` | 同上 | `tests/test_ini_write.py` 通过；覆盖备份命名与重名、原子替换、只改目标行、回读校验、失败回滚、只读目录、中文路径、临时文件清理；公开示例 `totk.ini.example` 的临时副本核对：仅目标行变化、其余字节一致 |
 | M1-T3 | 设置注册表（类型/范围/默认/中文标签/生效时机/暴露级别） | `DONE` | `src/totk_frontend/settings.py` | `tests/test_settings.py` 解析 `docs/settings.md` 键表逐项核对通过：节的归属、默认值、范围文本、生效时机、暴露级别、中文标签一致；`bind_*` 以模式项登记；`free_cores`、`replay_async` 作为文档第 7/9 节引用键登记 |
 | M1-T4 | 校验器（单键 + 跨字段规则） | `DONE` | `src/totk_frontend/validate.py` | `tests/test_validate.py` 通过：覆盖布尔/整数/小数/枚举/分辨率/键名/绑定/文本的单键校验，以及第 8 节全部 8 条跨字段规则、版本限制与未知键忽略 |
-| M1-T5 | 单元测试与测试数据（不含游戏数据） | `DONE` | `tests/`、`tools/coverage_check.py` | `python -m unittest discover -s tests -v` 全部用例通过、`python -m compileall src` 通过；`python tools/coverage_check.py` 语句覆盖率 99.32%（阈值 90%）；测试数据为手写合成样本，不含游戏数据；CRLF/BOM/无末尾换行在测试运行时生成 |
-| M1-T6 | 独立审查修正（写入拼接、`bind_*` 模式、校验健壮性、测试与文档同步） | `DOING` | 见验收记录 | 独立审查发现的问题逐项修复并有回归测试；单元测试、编译、覆盖率检查通过 |
+| M1-T5 | 单元测试与测试数据（不含游戏数据） | `DONE` | `tests/`、`tools/coverage_check.py` | `python -m unittest discover -s tests -v` 全部用例通过、`python -m compileall src` 通过；`python tools/coverage_check.py` 语句覆盖率 99.07%（阈值 90%）；测试数据为手写合成样本，不含游戏数据；CRLF/BOM/无末尾换行在测试运行时生成 |
+| M1-T6 | 独立审查修正（写入拼接、`bind_*` 模式、校验健壮性、测试与文档同步） | `DONE` | `src/totk_frontend/`、`tests/`、`tools/coverage_check.py`、相关文档 | 修复无末尾换行时新键拼接（补换行并加回归测试）；`bind_*` 收紧为文档与公开示例枚举的按键名，`bind_skip` 按未知键保留；整数校验不再转 `float`（防超大整数 `OverflowError`）；跨节同名键计入重复；绑定语法收紧；覆盖率工具在测试失败时退出非 0；POSIX 专属测试加平台守卫；结构化范围与文档范围文本互相校验；155 个用例通过、`compileall` 通过、语句覆盖率 99.07% |
 
 ### M2 预设与诊断
 
