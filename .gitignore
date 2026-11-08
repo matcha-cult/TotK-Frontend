@@ -1,0 +1,41 @@
+# 仅本地文档（不提交）
+private/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# 构建与打包产物
+build/
+dist/
+*.spec
+
+# 测试与工具缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+
+# 编辑器与系统
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# 游戏数据与派生文件（即使误放也不应入库）
+*.nsp
+*.xci
+*.nsz
+*.xcz
+*.nca
+*.tik
+*.cert
+prod.keys
+exefs/
+romfs/
+totk.exe
+totk.ini.bak-*
