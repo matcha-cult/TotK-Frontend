@@ -1,6 +1,6 @@
 # 设计（design）
 
-> 状态：M1 实现中；M0 的架构与契约不变，M1 的实现约定见第 12 节。实现细节在对应里程碑中细化，变更须同步 `plan.md` 与 `tracking.md`。
+> 状态：M1 已完成；M0 的架构与契约不变，M1 的实现约定见第 12 节，核心库接口见第 13 节。实现细节在对应里程碑中细化，变更须同步 `plan.md` 与 `tracking.md`。
 
 ## 1. 背景
 
@@ -130,3 +130,16 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 | I10 | 模式键 `bind_*` 在注册表中按模式登记（P0、只读、由 F1 菜单写入）；未知键一律保留但不展示为可编辑 | 对应第 11 节风险处置 |
 
 测试数据全部为手写合成样本，不含任何游戏数据；CRLF、BOM、无末尾换行等边界在测试运行时生成，避免换行归一化影响样本本身。
+
+## 13. 核心库接口（M1 交付）
+
+| 模块 | 公开接口 | 说明 |
+|---|---|---|
+| `ini` | `IniDocument`：`from_text`/`from_bytes`/`from_path`、`get`/`get_all`/`has`、`keys`/`sections`/`duplicates`、`set`/`unset`、`render`/`to_bytes` | 保序、保留注释与未知行；`set` 只改最后一个生效行，新增键插入目标节；`unset` 移除激活行、保留注释 |
+| `ini` | `read_ini`、`write_ini`、`write_bytes_atomic`、`create_backup`、`WriteResult`、`IniParseError`/`IniWriteError` | 写入安全模型见第 7 节；`write_ini` 返回备份路径与“是否发生变化” |
+| `settings` | `Setting`、`SETTINGS`、`get_setting`、`settings_in_section`、`ValueType`/`Effect`/`Priority`、`SECTION_ORDER`/`SECTION_LABELS` | 设置注册表，与 `settings.md` 逐项一致；`bind_*` 用模式项登记 |
+| `validate` | `Issue`、`Severity`、`validate_value`、`validate_document`、`effective_value`、`parse_resolution`、`is_16_9` | 单键与跨字段校验；只读；依赖本机环境的两条规则需调用方传入检测结果 |
+
+验证命令：`python -m unittest discover -s tests -v`、`python -m compileall src`、`python tools/coverage_check.py`
+（语句覆盖率阈值 90%，M1 验收时为 99.32%）。M2 的 `presets` 只能使用注册表中的键，`doctor` 复用
+`validate` 的稳定规则码（`rule.*`、`value.*`）。

@@ -32,12 +32,14 @@
 - 提交前运行：单元测试（若已建立）、`python -m compileall`（若已有代码）、以及 [docs/DOC-POLICY.md](docs/DOC-POLICY.md) 的敏感信息检查。
 - 不提交 `private/`、构建产物、虚拟环境、缓存。
 
-## 5. 代码规范（随 M1 建立后细化）
+## 5. 代码规范
 
 - 默认技术栈：Python 3.11+，仅标准库；GUI 使用标准库 `tkinter`（可选依赖，无头环境可只用 CLI）。
+- 包名 `totk_frontend`，源码位于 `src/totk_frontend/`（src 布局）；测试通过 `tests/_bootstrap.py` 把 `src/` 加入导入路径。
 - 不引入第三方运行时依赖；确需引入时先写入 `docs/plan.md` 的决策记录并说明许可证。
 - 纯逻辑（ini 解析/写入、设置模型、预设、校验、安装检测）必须可在无 GUI 环境下测试。
-- 写文件必须：先备份、原子替换（临时文件 + `os.replace`）、保留未知键与注释、只改目标行。
+- 写文件必须：先备份、原子替换（临时文件 + `os.replace`）、保留未知键与注释、只改目标行；统一使用 `ini.write_ini`。
+- 验证命令：`python -m unittest discover -s tests -v`、`python -m compileall src`、`python tools/coverage_check.py`（语句覆盖率阈值 90%）。
 
 ## 6. 参考代码的使用
 
