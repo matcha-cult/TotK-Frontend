@@ -22,7 +22,13 @@ from pathlib import Path
 from . import __version__
 from .doctor import diagnose, format_report
 from .ini import IniDocument, IniError, create_backup, read_ini, write_ini
-from .install import ALL_MARKERS, detect_install, find_install
+from .install import (
+    FINDING_LABELS,
+    detect_install,
+    detect_version,
+    find_install,
+    install_findings,
+)
 from .presets import PRESETS, apply_preset, format_plan, get_preset, plan_preset
 from .settings import SECTION_ORDER, SETTINGS, get_setting
 from .validate import SEVERITY_LABELS, Severity, validate_value
@@ -123,9 +129,18 @@ def cmd_detect(args: argparse.Namespace) -> int:
         print(f"  {'存在' if exists else '缺失'}  {name}")
     if info.looks_like_install:
         print("结果：检测通过。")
-        return EXIT_OK
-    print("结果：缺少必要标记：" + "、".join(info.missing))
-    return EXIT_USER_ERROR
+    else:
+        print("结果：缺少必要标记：" + "、".join(info.missing))
+    version = detect_version(directory)
+    print(f"版本：{version.detail}")
+    findings = install_findings(info)
+    if findings:
+        print("")
+        for finding in findings:
+            print(f"[{FINDING_LABELS[finding.level]}] {finding.message}")
+            if finding.suggestion:
+                print(f"  建议：{finding.suggestion}")
+    return EXIT_OK if info.looks_like_install else EXIT_USER_ERROR
 
 
 def cmd_list(args: argparse.Namespace) -> int:

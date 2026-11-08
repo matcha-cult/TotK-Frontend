@@ -32,6 +32,7 @@ TotK Frontend 是为 [TotK Recomp](https://github.com/valentderah/totk-pc-recomp
 ├── src/totk_frontend/         # 核心库与 CLI（ini、设置注册表、校验、预设、诊断、命令行）
 ├── tests/                     # 无头单元测试与手写合成测试数据
 ├── tools/coverage_check.py    # 语句覆盖率检查（仅标准库）
+├── tools/check_env.py         # 环境自检（Python/tkinter/仓库布局）
 ├── docs/                      # 公开文档（可提交）
 │   ├── DOC-POLICY.md           # 文档分级与提交检查
 │   ├── design.md               # 产品与技术设计
@@ -50,6 +51,7 @@ TotK Frontend 是为 [TotK Recomp](https://github.com/valentderah/totk-pc-recomp
 - M1：核心库（`totk.ini` 解析/写入、设置注册表、校验、单元测试）—— 已完成
 - M2：预设系统与 `doctor` 诊断 —— 已完成
 - M3：命令行工具（detect/list/get/set/preset/doctor/launch/log 等）—— 已完成
+- M5：安装检测与版本感知 —— 进行中（检测与版本感知已完成，引导页待做）
 - M4 起：GUI、安装引导、打包（详见 [docs/plan.md](docs/plan.md)）
 
 ## 参考项目

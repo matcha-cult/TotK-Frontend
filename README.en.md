@@ -32,6 +32,7 @@ Classification rules and the pre-commit checklist are in [docs/DOC-POLICY.md](do
 ├── src/totk_frontend/         # core library and CLI (ini, settings registry, validation, presets, doctor, command line)
 ├── tests/                     # headless unit tests and hand-written synthetic fixtures
 ├── tools/coverage_check.py    # statement-coverage check (stdlib only)
+├── tools/check_env.py         # environment self-check (Python/tkinter/repo layout)
 ├── docs/                      # public documentation (committable)
 │   ├── DOC-POLICY.md           # documentation tiers and commit checklist
 │   ├── design.md               # product and technical design
@@ -50,6 +51,7 @@ Classification rules and the pre-commit checklist are in [docs/DOC-POLICY.md](do
 - M1: core library (totk.ini parsing/writing, settings registry, validation, unit tests) — done
 - M2: presets and `doctor` diagnostics — done
 - M3: command-line tool (detect/list/get/set/preset/doctor/launch/log, etc.) — done
+- M5: install detection and version awareness — in progress (detection and version awareness done, guidance page pending)
 - From M4: GUI, install guidance, packaging (see [docs/plan.md](docs/plan.md))
 
 ## Reference projects

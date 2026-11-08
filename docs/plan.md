@@ -107,7 +107,7 @@
 
 **目标**：可交付给玩家的构建与合规材料。
 
-**任务**：`M6-T1` 打包；`M6-T2` 发布检查单；`M6-T3` 许可证与第三方声明。
+**任务**：`M6-T1` 打包（Windows 用 PyInstaller 生成免装 Python 的发布包）；`M6-T2` 发布检查单；`M6-T3` 许可证与第三方声明。
 
 **产物**：构建脚本、`docs/release-checklist.md`、`LICENSE`、`THIRD_PARTY_NOTICES.md`。
 
@@ -122,6 +122,7 @@
 | D3 | 许可证 | **未定** | 需仓库所有者决定；参考项目均为 MIT；建议 MIT，但不得代定 |
 | D4 | 是否代跑 TotK Recomp 安装器 | 已定：否 | 只检测与提示，避免打包/许可/安全边界扩大 |
 | D5 | Linux 首发支持 | 未定（M6 评估） | Windows 为第一目标；Linux 代码路径保留 |
+| D6 | GUI 与发布形态：`tkinter` 窗口 + PyInstaller 打包（玩家无需安装 Python） | 已定（用户选择方案 A） | 窗口沿用 D1 的标准库 `tkinter`；PyInstaller 仅在构建期使用（GPL 2.0 + 例外条款，允许打包分发），M6 需在 `THIRD_PARTY_NOTICES.md` 登记许可证并固定版本；Windows 包必须在 Windows 上构建，不做交叉编译；Rust 界面作为以后的可选替换方案记录在案，不进入当前里程碑 |
 
 ## 5. 非目标（重申）
 
