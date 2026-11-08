@@ -8,46 +8,45 @@
 
 ## 你的目标
 
-在现有仓库 **TotK-Frontend** 中，按 `docs/plan.md` 的里程碑推进，先完成 **M2（预设系统与 `doctor` 诊断）**。本项目是 TotK Recomp 的启动器/配置前台，不重编译、不模拟、不改游戏文件。
+在现有仓库 **TotK-Frontend** 中，按 `docs/plan.md` 的里程碑推进，先完成 **M3（CLI）**。本项目是 TotK Recomp 的启动器/配置前台，不重编译、不模拟、不改游戏文件。
 
 ## 开始前必读（按顺序）
 
-1. `AGENTS.md` —— 仓库硬性规则（文档分级、禁止时间估计、提交规范）。
+1. `AGENTS.md` —— 仓库硬性规则（文档分级、禁止时间估计、提交规范、红线）。
 2. `docs/DOC-POLICY.md` —— `docs/` 可公开可提交，`private/` 仅本地不提交。
 3. `docs/plan.md` —— 里程碑与退出标准、决策记录 D1–D5。
 4. `docs/tracking.md` —— 唯一任务事实源；开工前把对应任务改为 `DOING`。
-5. `docs/design.md` —— 架构、写入安全模型（第 7 节）、M1 实现约定（第 12 节）、核心库接口（第 13 节）。
-6. `docs/settings.md` —— `totk.ini` 键表、范围、生效时机、第 8 节跨字段校验规则、第 9 节预设约束。
+5. `docs/design.md` —— 架构、写入安全模型（第 7 节）、M1 约定（第 12 节）、核心库接口（第 13 节）、M2 约定（第 14 节）。
+6. `docs/settings.md` —— `totk.ini` 键表、范围、生效时机、第 8 节跨字段规则、第 9 节预设。
 
 ## 当前状态
 
-- M0（脚手架与文档）与 M1（核心库，含独立审查修正）已完成，验收记录见 `docs/tracking.md`。
-- 已有代码：`src/totk_frontend/ini.py`（解析 + 安全写入）、`settings.py`（注册表）、`validate.py`（校验）；
+- M0（脚手架与文档）、M1（核心库，含独立审查修正）、M2（预设与 `doctor`）已完成，验收记录见 `docs/tracking.md`。
+- 已有模块：`src/totk_frontend/{ini,settings,validate,presets,doctor}.py`；
   `tests/` 全部为无头测试（`tests/_bootstrap.py` 负责把 `src/` 加入导入路径）；
   `tools/coverage_check.py` 统计语句覆盖率（阈值 90%，测试失败时同样返回非 0）。
-- M1 可复用接口见 `docs/design.md` 第 13 节；写 `totk.ini` 一律走 `ini.write_ini`，不要自己实现写盘。
-- M2 尚未开始；`presets.py`、`doctor` 规则表需要新建。
+- 尚未有 CLI 入口：M3 需要新增 `src/totk_frontend/cli.py` 与 `src/totk_frontend/__main__.py`，使 `python -m totk_frontend ...` 可用。
+- 写 `totk.ini` 一律走 `ini.write_ini`；预设差异/回滚用 `presets.plan_preset`/`apply_preset`/`revert_plan`；诊断用 `doctor.diagnose`/`format_report`。
 
-## 下一步任务（M2）
+## 下一步任务（M3）
 
 | ID | 任务 | 验收 |
 |---|---|---|
-| M2-T1 | 预设定义（Savage Wind 风格 / 手柄 / 性能 / 画质） | 只包含注册表中存在且已声明范围的键 |
-| M2-T2 | 预设应用、dry-run、回滚 | 只改差异集，未涉及的行不动 |
-| M2-T3 | `doctor` 诊断规则 | 覆盖 `settings.md` 第 8 节，输出可操作建议 |
-
-预设的必须包含/禁止包含项见 `docs/settings.md` 第 9 节；`fps_limit`、`free_cores`、`mouse_sens` 等组合约束必须由校验/诊断体现。
+| M3-T1 | 命令框架与 `detect` | 每个命令有 `--help`；`detect` 只读检测安装目录标记（`totk.exe`/`totk`、`totk.ini`、`totk-install.json`、`exefs/`、`romfs/`），缺项可解释；M5 再扩展版本与引导 |
+| M3-T2 | `list` / `get` / `set` / `unset` | 读写结果正确；未知键按未知处理（保留、不校验）；`set` 走安全写入并回读校验 |
+| M3-T3 | `preset` / `apply` / `backup` / `restore` | `--dry-run` 输出差异预览；应用只改差异集；备份/恢复可用且失败可回滚 |
+| M3-T4 | `launch` / `log` / `version` | 不启动游戏也能测试；`launch` 只按记录路径启动 `totk.exe`，不修改游戏文件 |
 
 ## 技术栈与约定
 
-- Python 3.11+，**仅标准库**；GUI 只在 M4 引入 `tkinter`，且必须可选。
-- 包名 `totk_frontend`，源码在 `src/totk_frontend/`；新模块同样放这里，测试放 `tests/`。
+- Python 3.11+，**仅标准库**（CLI 用 `argparse`）；GUI 只在 M4 引入 `tkinter`，且必须可选。
+- 包名 `totk_frontend`，源码在 `src/totk_frontend/`；测试放 `tests/`，沿用无头方式。
 - 纯逻辑必须可无头运行与测试；不得依赖 Windows 特有 API（路径用 `pathlib`）。
-- 写文件必须：先备份（同目录 `totk.ini.bak-<时间戳>`）→ 写临时文件 → `os.replace` → 回读校验；保留未知键、注释、空行与顺序。复用 `ini.write_ini`。
-- 预设只能引用 `settings.SETTINGS` 中的键；`doctor` 复用 `validate` 的稳定规则码（`rule.*`、`value.*`）。
+- 写文件必须：先备份（同目录 `totk.ini.bak-<时间戳>`）→ 写临时文件 → `os.replace` → 回读校验；保留未知键、注释、空行与顺序。
+- 退出码约定建议在 `docs/design.md` 记录（例如 0 成功、1 用户可修正错误、2 用法错误）；错误信息用简体中文、可操作。
+- 无游戏/无 `totk.ini` 的机器上，命令不得崩溃，应给出明确提示。
 - 不引入第三方运行时依赖；确需引入先写决策记录。
-- 代码中的注释与文档用简体中文；标识符用英文。
-- 测试数据必须是手写合成样本，不得含任何游戏数据。
+- 代码注释与文档用简体中文；标识符用英文；测试数据必须是手写合成样本，不含游戏数据。
 
 ## 提交与跟踪
 

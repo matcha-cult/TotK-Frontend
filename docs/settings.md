@@ -115,7 +115,7 @@
 | `upscaler = fsr` 且 `sharpness = 0` | 提示 | 可能偏软 |
 | 同一键出现多次 | 警告 | 只有最后一个生效，建议清理 |
 
-## 9. 预设（M2 定义，此处为约束）
+## 9. 预设（M2 已实现）
 
 | 预设 | 目标 | 必须包含 | 禁止包含 |
 |---|---|---|---|
@@ -124,4 +124,11 @@
 | `performance` | 低配/流畅 | `fps_limit=60`、`aniso=game`、`shadow_scale=1`、`render_scale=game`、`replay_async=1` | 同上 |
 | `quality` | 画质优先 | `render_scale=100`、`aniso=16`、`shadow_scale=2`、`pcss=50`、`contact_shadows=50` | 同上 |
 
-预设只修改注册表中存在且已声明的键；应用前必须 `--dry-run` 预览。
+实现见 `src/totk_frontend/presets.py`；上表是约束，“必须包含”即各预设的目标值。
+
+- 预设只修改注册表中存在且已声明的键；每个目标值都要通过单键校验，`free_cores=1`、`mouse_sens=0` 永远不写入。
+- 应用 = 只写差异集：已是目标值（包括注册表默认值即目标值）的键不写入；预设未涉及的键、注释、空行与顺序保持原样。
+- `menu_cursor` 仅 1.4.3 可用：未提供版本时按最新版应用，提供 1.1.0/1.2.1 时跳过该项。
+- dry-run：`presets.plan_preset()` 返回差异计划，`presets.format_plan()` 输出可读预览；CLI 的 `--dry-run` 在 M3 接入。
+- 回滚：`presets.revert_plan()` 恢复原有效值、移除新增的激活行；应用时新建的空节头保留（与 design 第 12 节 I5 一致）。
+- 落盘统一走 `ini.write_ini`：备份 → 原子替换 → 回读校验，失败回滚。

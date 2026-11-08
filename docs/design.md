@@ -1,6 +1,6 @@
 # 设计（design）
 
-> 状态：M1 已完成（含独立审查修正）；M0 的架构与契约不变，M1 的实现约定见第 12 节，核心库接口见第 13 节。实现细节在对应里程碑中细化，变更须同步 `plan.md` 与 `tracking.md`。
+> 状态：M2 已完成。M0 的架构与契约不变；M1 实现约定见第 12 节，核心库接口见第 13 节，M2 实现约定见第 14 节。实现细节在对应里程碑中细化，变更须同步 `plan.md` 与 `tracking.md`。
 
 ## 1. 背景
 
@@ -52,7 +52,8 @@
 | `ini` | 解析/序列化 `totk.ini`：保序、保留注释与未知键、大小写不敏感、节（section）归属 | 是 |
 | `settings` | 设置注册表：键、节、类型、范围/枚举、默认值、中文标签、生效时机、暴露优先级 | 是 |
 | `validate` | 单键校验 + 跨字段规则（如 `fps_limit>60` 与 `realtime`） | 是 |
-| `presets` | 预设定义与应用（差异集），支持 dry-run 与回滚 | 是 |
+| `presets` | 预设定义、差异计划（dry-run）、应用与回滚 | 是 |
+| `doctor` | 诊断报告：规则表、未知键/重复键汇总、可读建议 | 是 |
 | `install` | 安装目录检测、版本信息、日志定位、启动命令 | 是 |
 | `cli` | `detect / list / get / set / preset / doctor / launch / log` | 是 |
 | `gui` | tkinter 窗口：启动页、画面、声音、控制、鼠标、高级、日志、关于 | 仅此层 |
@@ -131,7 +132,7 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 
 测试数据全部为手写合成样本，不含任何游戏数据；CRLF、BOM、无末尾换行等边界在测试运行时生成，避免换行归一化影响样本本身。
 
-## 13. 核心库接口（M1 交付）
+## 13. 核心库接口（M1、M2）
 
 | 模块 | 公开接口 | 说明 |
 |---|---|---|
@@ -139,7 +140,20 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 | `ini` | `read_ini`、`write_ini`、`write_bytes_atomic`、`create_backup`、`WriteResult`、`IniParseError`/`IniWriteError` | 写入安全模型见第 7 节；`write_ini` 返回备份路径与“是否发生变化” |
 | `settings` | `Setting`、`SETTINGS`、`get_setting`、`settings_in_section`、`ValueType`/`Effect`/`Priority`、`SECTION_ORDER`/`SECTION_LABELS` | 设置注册表，与 `settings.md` 逐项一致；`bind_*` 用模式项登记 |
 | `validate` | `Issue`、`Severity`、`validate_value`、`validate_document`、`effective_value`、`parse_resolution`、`is_16_9` | 单键与跨字段校验；只读；依赖本机环境的两条规则需调用方传入检测结果 |
+| `presets` | `Preset`、`PRESETS`、`get_preset`/`preset_names`、`validate_preset`/`validate_presets`、`plan_preset`/`apply_preset`/`revert_plan`/`format_plan` | 预设只含注册表键；`plan_preset` 即 dry-run；回滚恢复原有效值 |
+| `doctor` | `DoctorRule`、`RULE_CATALOG`、`rule_for_code`、`diagnose`、`DoctorReport`、`format_report` | 规则表覆盖 `settings.md` 第 8 节；报告汇总未知键/重复键/版本信息 |
 
 验证命令：`python -m unittest discover -s tests -v`、`python -m compileall src`、`python tools/coverage_check.py`
-（语句覆盖率阈值 90%，M1 验收时为 99.07%）。M2 的 `presets` 只能使用注册表中的键，`doctor` 复用
+（语句覆盖率阈值 90%，M1 验收时为 99.07%，M2 验收时为 98.65%）。M2 的 `presets` 只能使用注册表中的键，`doctor` 复用
 `validate` 的稳定规则码（`rule.*`、`value.*`）。
+
+## 14. M2 实现决定（记录）
+
+| 编号 | 决定 | 说明 |
+|---|---|---|
+| J1 | 预设只使用注册表键，目标值必须通过单键校验；禁止 `free_cores=1`、`mouse_sens=0` | 由 `validate_presets()` 与测试保证 |
+| J2 | dry-run = `plan_preset()`（纯函数，不改文档）；应用 = 按计划修改内存文档，落盘交给 `write_ini` | 计划同时给出“应用后文档”的校验警告 |
+| J3 | 应用只写差异集：已是目标值（含注册表默认值即目标值）的键不写入 | 未涉及的键、注释、空行与顺序不变 |
+| J4 | 回滚 = `revert_plan()`：有旧值的键恢复旧值，原先没有激活行的键用 `unset` 移除 | 应用时新建的空节头保留（对应 I5） |
+| J5 | 版本：`menu_cursor` 仅 1.4.3；未提供版本时按最新版处理，提供 1.1.0/1.2.1 时跳过该项 | 版本检测在 M5 接入 |
+| J6 | `doctor` 复用 `validate` 的稳定规则码，`RULE_CATALOG` 覆盖 `settings.md` 第 8 节 8 条规则；未知键只汇总不校验 | 诊断只读，不自动改文件 |
