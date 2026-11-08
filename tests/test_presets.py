@@ -295,7 +295,8 @@ class PresetRevertTest(unittest.TestCase):
         plan = apply_preset(doc, "quality")
         self.assertTrue(plan.changes)
         revert_plan(doc, plan)
-        self.assertEqual(doc.render(), "[display]\n")
+        # 新建文件的换行按平台默认（design I3），因此按行比较而不是按字节比较。
+        self.assertEqual(doc.render().splitlines(), ["[display]"])
 
     def test_revert_requires_plan(self) -> None:
         with self.assertRaises(TypeError):

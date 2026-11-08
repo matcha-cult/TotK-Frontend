@@ -222,7 +222,8 @@ class SetUnsetCommandTest(CliTestBase):
         self.assertEqual(code, 0)
         created = empty / "totk.ini"
         self.assertTrue(created.exists())
-        self.assertEqual(created.read_text(encoding="utf-8"), "[audio]\nvolume = 50\n")
+        # 新建文件的换行按平台默认（design I3），因此按行比较而不是按字节比较。
+        self.assertEqual(created.read_text(encoding="utf-8").splitlines(), ["[audio]", "volume = 50"])
         self.assertNotIn("备份：", output)
 
     def test_set_same_value_does_not_write(self) -> None:
