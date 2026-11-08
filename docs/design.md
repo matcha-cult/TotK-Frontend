@@ -1,6 +1,6 @@
 # 设计（design）
 
-> 状态：M2 已完成。M0 的架构与契约不变；M1 实现约定见第 12 节，核心库接口见第 13 节，M2 实现约定见第 14 节。实现细节在对应里程碑中细化，变更须同步 `plan.md` 与 `tracking.md`。
+> 状态：M3 已完成。M0 的架构与契约不变；M1 实现约定见第 12 节，核心库接口见第 13 节，M2 实现约定见第 14 节，M3 实现约定见第 15 节。实现细节在对应里程碑中细化，变更须同步 `plan.md` 与 `tracking.md`。
 
 ## 1. 背景
 
@@ -132,7 +132,7 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 
 测试数据全部为手写合成样本，不含任何游戏数据；CRLF、BOM、无末尾换行等边界在测试运行时生成，避免换行归一化影响样本本身。
 
-## 13. 核心库接口（M1、M2）
+## 13. 核心库接口（M1–M3）
 
 | 模块 | 公开接口 | 说明 |
 |---|---|---|
@@ -142,9 +142,11 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 | `validate` | `Issue`、`Severity`、`validate_value`、`validate_document`、`effective_value`、`parse_resolution`、`is_16_9` | 单键与跨字段校验；只读；依赖本机环境的两条规则需调用方传入检测结果 |
 | `presets` | `Preset`、`PRESETS`、`get_preset`/`preset_names`、`validate_preset`/`validate_presets`、`plan_preset`/`apply_preset`/`revert_plan`/`format_plan` | 预设只含注册表键；`plan_preset` 即 dry-run；回滚恢复原有效值 |
 | `doctor` | `DoctorRule`、`RULE_CATALOG`、`rule_for_code`、`diagnose`、`DoctorReport`、`format_report` | 规则表覆盖 `settings.md` 第 8 节；报告汇总未知键/重复键/版本信息 |
+| `install` | `InstallInfo`、`detect_install`、`find_install`、标记常量 | 只读标记检测；M5 扩展版本识别与缺失解释 |
+| `cli` | `main`、`build_parser`、`CliError`、退出码常量 | `python -m totk_frontend` 入口；不依赖 GUI |
 
 验证命令：`python -m unittest discover -s tests -v`、`python -m compileall src`、`python tools/coverage_check.py`
-（语句覆盖率阈值 90%，M1 验收时为 99.07%，M2 验收时为 98.65%）。M2 的 `presets` 只能使用注册表中的键，`doctor` 复用
+（语句覆盖率阈值 90%，M1 验收时为 99.07%，M2 时为 98.65%，M3 时为 98.94%）。M2 的 `presets` 只能使用注册表中的键，`doctor` 复用
 `validate` 的稳定规则码（`rule.*`、`value.*`）。
 
 ## 14. M2 实现决定（记录）
@@ -157,3 +159,16 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 | J4 | 回滚 = `revert_plan()`：有旧值的键恢复旧值，原先没有激活行的键用 `unset` 移除 | 应用时新建的空节头保留（对应 I5） |
 | J5 | 版本：`menu_cursor` 仅 1.4.3；未提供版本时按最新版处理，提供 1.1.0/1.2.1 时跳过该项 | 版本检测在 M5 接入 |
 | J6 | `doctor` 复用 `validate` 的稳定规则码，`RULE_CATALOG` 覆盖 `settings.md` 第 8 节 8 条规则；未知键只汇总不校验 | 诊断只读，不自动改文件 |
+
+## 15. M3 实现决定（记录）
+
+| 编号 | 决定 | 说明 |
+|---|---|---|
+| K1 | 入口为 `python -m totk_frontend ...`（`__main__.py` → `cli.main`）；暂不添加 `pyproject.toml`/console_scripts | 打包（含入口脚本）在 M6 统一处理 |
+| K2 | 退出码：`0` 成功；`1` 用户可修正错误；`2` 命令行用法错误（argparse） | CLI 与后续 GUI/脚本共用该约定 |
+| K3 | 安装目录检测为 `install.py` 的最小标记检查；M5 扩展版本识别、缺失解释与首次引导 | 只读，不执行安装器、不下载任何内容 |
+| K4 | 目标文件解析优先级：`--ini` > `--dir` > 从当前目录向上自动探测；缺目录时中文提示并退出 1 | `detect`/`launch` 同样适用 |
+| K5 | 所有写操作走 `write_ini`；`backup` 用 `create_backup`；`restore` 默认目标为备份同目录的 `totk.ini`，恢复前先备份当前文件 | 失败路径沿用第 7 节写安全模型 |
+| K6 | `launch` 默认真实启动 `totk.exe`/`totk`，`--dry-run` 只打印命令；`log` 依次查找 `totk.log`、`log.txt`、`*.log`，可用 `--path` 指定 | 上游日志文件名待 M5 用真实安装核对 |
+| K7 | 结果输出到 stdout，可操作错误输出到 stderr；`doctor` 发现问题时退出码 1 | 便于脚本化 |
+| K8 | 未知键：`get/set/unset` 拒绝并提示不可编辑；`doctor` 只汇总不校验 | 与 I10 一致 |

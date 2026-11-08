@@ -2,7 +2,7 @@
 
 [English](README.en.md)
 
-> 状态：**M2 已完成**。核心库（`totk.ini` 解析/写入、设置注册表、校验）、预设系统与 `doctor` 诊断已就绪并有单元测试；后续里程碑见 [docs/plan.md](docs/plan.md)。
+> 状态：**M3 已完成**。核心库（`totk.ini` 解析/写入、设置注册表、校验）、预设与 `doctor` 诊断、命令行工具已就绪并有单元测试；后续里程碑见 [docs/plan.md](docs/plan.md)。
 
 TotK Frontend 是为 [TotK Recomp](https://github.com/valentderah/totk-pc-recomp)（《塞尔达传说：王国之泪》的静态重编译 PC 移植）准备的 **PC 化启动器与配置前台**。产品形态参考 [Savage Wind Recomp](https://github.com/Revivedx/SavageWindRecomp)（BotW 的同类项目）的 Configuration 界面：在进入游戏前完成启动、画面 / 声音 / 控制 / 鼠标设置、预设管理、游戏文件引导与日志查看，让玩家尽量不必手改 `totk.ini`。
 
@@ -29,7 +29,7 @@ TotK Frontend 是为 [TotK Recomp](https://github.com/valentderah/totk-pc-recomp
 .
 ├── README.md / README.en.md   # 双语说明（工作区规范要求）
 ├── AGENTS.md                  # 仓库协作与 AI 代理规则
-├── src/totk_frontend/         # 核心库（ini 解析/写入、设置注册表、校验、预设、诊断）
+├── src/totk_frontend/         # 核心库与 CLI（ini、设置注册表、校验、预设、诊断、命令行）
 ├── tests/                     # 无头单元测试与手写合成测试数据
 ├── tools/coverage_check.py    # 语句覆盖率检查（仅标准库）
 ├── docs/                      # 公开文档（可提交）
@@ -49,7 +49,8 @@ TotK Frontend 是为 [TotK Recomp](https://github.com/valentderah/totk-pc-recomp
 - M0：脚手架与规范 —— 已完成
 - M1：核心库（`totk.ini` 解析/写入、设置注册表、校验、单元测试）—— 已完成
 - M2：预设系统与 `doctor` 诊断 —— 已完成
-- M3 起：CLI、GUI、安装引导、打包（详见 [docs/plan.md](docs/plan.md)）
+- M3：命令行工具（detect/list/get/set/preset/doctor/launch/log 等）—— 已完成
+- M4 起：GUI、安装引导、打包（详见 [docs/plan.md](docs/plan.md)）
 
 ## 参考项目
 
