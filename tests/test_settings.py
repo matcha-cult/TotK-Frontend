@@ -239,6 +239,23 @@ class RegistryMetadataTest(unittest.TestCase):
             else:
                 self.assertTrue(setting.writable, setting.key)
 
+    def test_structured_ranges_match_documented_text(self) -> None:
+        def fmt(value: int | float) -> str:
+            return f"{value:g}" if isinstance(value, float) else str(value)
+
+        for setting in SETTINGS:
+            if setting.value_type in (ValueType.INTEGER, ValueType.NUMBER):
+                if setting.min_value is not None and setting.max_value is not None:
+                    expected = f"{fmt(setting.min_value)}–{fmt(setting.max_value)}"
+                    self.assertIn(expected, setting.range_doc, setting.key)
+            elif setting.value_type is ValueType.RESOLUTION:
+                assert setting.width_range is not None and setting.height_range is not None
+                expected = (
+                    f"{setting.width_range[0]}x{setting.height_range[0]}"
+                    f"–{setting.width_range[1]}x{setting.height_range[1]}"
+                )
+                self.assertIn(expected, setting.range_doc, setting.key)
+
     def test_value_types_are_consistent(self) -> None:
         for setting in SETTINGS:
             if setting.value_type in (ValueType.INTEGER, ValueType.NUMBER):
@@ -280,6 +297,34 @@ class LookupTest(unittest.TestCase):
             self.assertTrue(is_pattern_key(key), key)
         self.assertIsNone(get_setting("bind_"))
         self.assertIsNone(get_setting("not_bind_A"))
+
+    def test_bind_pattern_covers_documented_names_only(self) -> None:
+        from totk_frontend.settings import BIND_KEYS
+
+        for key in BIND_KEYS:
+            self.assertIsNotNone(get_setting(key), key)
+        self.assertEqual(len(BIND_KEYS), len(set(BIND_KEYS)))
+        # [performance] 的 bind_skip 是优化开关，不是按键绑定：按未知键保留、不参与校验。
+        for key in ("bind_skip", "bind_unknown", "bind_A_extra"):
+            self.assertIsNone(get_setting(key), key)
+            self.assertFalse(is_pattern_key(key), key)
+
+    def test_volume_and_window_boundaries(self) -> None:
+        from totk_frontend.validate import Severity, validate_value
+
+        volume = get_setting("volume")
+        assert volume is not None
+        for value in ("0", "100"):
+            self.assertEqual(validate_value(volume, value), [], value)
+        for value in ("-1", "101"):
+            issues = validate_value(volume, value)
+            self.assertEqual([issue.severity for issue in issues], [Severity.ERROR], value)
+        window = get_setting("window_size")
+        assert window is not None
+        self.assertEqual(validate_value(window, "640x360"), [])
+        self.assertEqual(validate_value(window, "7680x4320"), [])
+        self.assertNotEqual(validate_value(window, "639x360"), [])
+        self.assertNotEqual(validate_value(window, "7681x4320"), [])
 
     def test_sections_order(self) -> None:
         self.assertEqual(

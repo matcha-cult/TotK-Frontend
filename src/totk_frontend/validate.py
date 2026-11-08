@@ -28,6 +28,7 @@ __all__ = [
     "validate_value",
     "validate_document",
     "is_16_9",
+    "parse_resolution",
     "effective_value",
 ]
 
@@ -65,6 +66,7 @@ _INTEGER_RE = re.compile(r"[+-]?\d+")
 _NUMBER_RE = re.compile(r"[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?")
 _RESOLUTION_RE = re.compile(r"^\s*(\d{1,6})\s*[xX]\s*(\d{1,6})\s*$")
 _KEYNAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+_BINDING_NAME_RE = re.compile(r"^[a-z0-9_]+$")
 
 
 def _error(code: str, setting: Setting, key: str, message: str, suggestion: str = "") -> Issue:
@@ -98,7 +100,7 @@ def _check_choice(setting: Setting, key: str, text: str, choices: tuple[str, ...
     )
 
 
-def _check_numeric_range(setting: Setting, key: str, value: float, text: str) -> Issue | None:
+def _check_numeric_range(setting: Setting, key: str, value: int | float, text: str) -> Issue | None:
     if setting.min_value is not None and value < setting.min_value:
         return _error(
             "value.range",
@@ -119,6 +121,7 @@ def _check_numeric_range(setting: Setting, key: str, value: float, text: str) ->
 
 
 def _validate_binding(setting: Setting, key: str, text: str) -> Issue | None:
+    """只做结构校验（pad:/key: 前缀与名称字符集），不校验具体名称是否被当前版本支持。"""
     if text.lower() == "none":
         return None
     tokens = [token.strip() for token in text.split(",") if token.strip()]
@@ -132,10 +135,11 @@ def _validate_binding(setting: Setting, key: str, text: str) -> Issue | None:
         )
     for token in tokens:
         part, separator, name = token.partition(":")
+        name_text = name.strip().lower()
         if (
             not separator
             or part.strip().lower() not in ("pad", "key")
-            or not name.strip()
+            or _BINDING_NAME_RE.fullmatch(name_text) is None
         ):
             return _error(
                 "value.binding",
@@ -195,7 +199,8 @@ def validate_value(setting: Setting, value: str, *, key: str | None = None) -> l
                     _suggestion_for(setting),
                 )
             ]
-        issue = _check_numeric_range(setting, used_key, float(int(text)), text)
+        # Python 整数是任意精度，直接比较即可；不要转 float，避免超大整数抛 OverflowError。
+        issue = _check_numeric_range(setting, used_key, int(text), text)
         return [issue] if issue is not None else []
 
     if value_type is ValueType.NUMBER:
@@ -475,9 +480,15 @@ def _collect_cross_field_issues(
             )
         )
 
-    # 8) 同一键出现多次
+    # 8) 同一键出现多次（跨节同名键同样只有最后一个生效）
     for duplicate in document.duplicates():
-        location = f"[{duplicate.section}]" if duplicate.section else "节外"
+        named_sections = [section for section in duplicate.sections if section is not None]
+        if len(named_sections) > 1:
+            location = "多个节"
+        elif named_sections:
+            location = f"[{named_sections[0]}]"
+        else:
+            location = "节外"
         issues.append(
             Issue(
                 severity=Severity.WARNING,

@@ -135,6 +135,27 @@ class SetMissingKeyTest(unittest.TestCase):
         self.assertEqual(doc.render(), "[a]\na = 1\n\n[b-section]\nb = 2\n")
         self.assertEqual(doc.lines[-1].eol, "\n")
 
+    def test_insert_without_final_newline_after_key(self) -> None:
+        doc = IniDocument.from_text("[audio]\nvolume = 100")
+        doc.set("audio_prefill_ms", "20", "audio")
+        self.assertEqual(doc.render(), "[audio]\nvolume = 100\naudio_prefill_ms = 20\n")
+        self.assertEqual(doc.get("audio_prefill_ms"), "20")
+
+    def test_insert_without_final_newline_after_header(self) -> None:
+        doc = IniDocument.from_text("[audio]")
+        doc.set("volume", "100", "audio")
+        self.assertEqual(doc.render(), "[audio]\nvolume = 100\n")
+
+    def test_insert_without_final_newline_after_comment(self) -> None:
+        doc = IniDocument.from_text("[audio]\n# 说明")
+        doc.set("volume", "100", "audio")
+        self.assertEqual(doc.render(), "[audio]\n# 说明\nvolume = 100\n")
+
+    def test_insert_without_final_newline_crlf(self) -> None:
+        doc = IniDocument.from_text("[audio]\r\nvolume = 100")
+        doc.set("audio_prefill_ms", "20", "audio")
+        self.assertEqual(doc.render(), "[audio]\r\nvolume = 100\r\naudio_prefill_ms = 20\r\n")
+
     def test_insert_uses_detected_crlf(self) -> None:
         doc = IniDocument.from_text("[a]\r\na = 1\r\n")
         doc.set("b", "2", "a")
@@ -185,6 +206,10 @@ class SetValidationTest(unittest.TestCase):
     def test_rejects_empty_section_name(self) -> None:
         with self.assertRaises(ValueError):
             self.doc.set("b", "1", "  ")
+
+    def test_rejects_section_name_with_brackets(self) -> None:
+        with self.assertRaises(ValueError):
+            self.doc.set("b", "1", "bad]name")
 
 
 class UnsetTest(unittest.TestCase):

@@ -235,6 +235,31 @@ class DocumentLevelTest(unittest.TestCase):
         doc = make_doc("[display]\nunknown_future_key = whatever\n")
         self.assertEqual(validate_document(doc), [])
 
+    def test_bind_skip_is_an_unknown_key_not_a_binding(self) -> None:
+        doc = make_doc("[performance]\nbind_skip = 1\n")
+        self.assertEqual(validate_document(doc), [])
+
+    def test_cross_section_duplicate_key_is_warned(self) -> None:
+        doc = make_doc("[frame rate]\nfps_limit = 60\n[display]\nfps_limit = 60\n")
+        issues = [item for item in validate_document(doc) if item.code == "rule.duplicate_key"]
+        self.assertEqual(len(issues), 1)
+        self.assertIn("多个节", issues[0].message)
+
+    def test_huge_integer_does_not_crash(self) -> None:
+        huge = "9" * 400
+        self.assertEqual(codes(validate_value(setting("fps_limit"), huge)), ["value.range"])
+        self.assertEqual(codes(validate_value(setting("volume"), huge)), ["value.range"])
+        self.assertIsInstance(validate_document(make_doc(f"[audio]\nvolume = {huge}\n")), list)
+
+    def test_binding_requires_well_formed_entries(self) -> None:
+        binding = setting("bind_A")
+        for bad in ("pad:east key:E", "pad:east:foo", "key:E # comment", "pad:east, key:"):
+            self.assertEqual(
+                codes(validate_value(binding, bad, key="bind_a")),
+                ["value.binding"],
+                bad,
+            )
+
     def test_binding_pattern_keys_are_validated(self) -> None:
         doc = make_doc("[input]\nbind_A = pad:east, key:E\nbind_B = broken\n")
         issues = errors(validate_document(doc))

@@ -130,11 +130,15 @@ class Change:
 
 @dataclass(frozen=True)
 class DuplicateKey:
-    """同一节内重复出现的键。"""
+    """在文件中多次出现的键。
 
-    section: str | None
+    因为 ``totk.ini`` 中同名键以最后一个生效，跨节同名也计入重复；
+    ``sections`` 按首次出现顺序记录该键出现过的节。
+    """
+
     key: str
     count: int
+    sections: tuple[str | None, ...]
 
 
 def _split_lines(text: str) -> list[tuple[str, str]]:
@@ -184,6 +188,8 @@ def _normalize_section(section: str | None) -> str | None:
     text = section.strip()
     if not text:
         raise ValueError("节名不能为空字符串；全局键请使用 section=None 读取")
+    if "[" in text or "]" in text:
+        raise ValueError(f"节名不能包含方括号：{section!r}")
     return text.lower()
 
 
@@ -358,21 +364,25 @@ class IniDocument:
         return tuple(result)
 
     def duplicates(self) -> tuple[DuplicateKey, ...]:
-        """返回同一节内重复出现的键（按首次出现顺序）。"""
-        counts: dict[tuple[str | None, str], int] = {}
-        order: list[tuple[str | None, str]] = []
+        """返回在文件中出现多次的键（跨节同名也计入；按首次出现顺序）。"""
+        counts: dict[str, int] = {}
+        order: list[str] = []
+        sections: dict[str, list[str | None]] = {}
         for line in self.lines:
             if line.kind is not LineKind.KEY_VALUE or line.key is None:
                 continue
-            identity = (line.section, line.key)
-            if identity not in counts:
-                counts[identity] = 0
-                order.append(identity)
-            counts[identity] += 1
+            key = line.key
+            if key not in counts:
+                counts[key] = 0
+                order.append(key)
+                sections[key] = []
+            counts[key] += 1
+            if line.section not in sections[key]:
+                sections[key].append(line.section)
         return tuple(
-            DuplicateKey(section, key, counts[(section, key)])
-            for section, key in order
-            if counts[(section, key)] > 1
+            DuplicateKey(key, counts[key], tuple(sections[key]))
+            for key in order
+            if counts[key] > 1
         )
 
     @property
@@ -467,6 +477,10 @@ class IniDocument:
             insert_index = last_content
         else:
             insert_index = header_index
+        if self.lines[insert_index].eol == "":
+            # 目标行是文件末行且没有换行：先补一个换行，否则新键会拼接到上一行。
+            # 这是插入路径唯一会改动既有行字节的地方（只补换行符，不改行内容）。
+            self.lines[insert_index].eol = self.newline
         self.lines.insert(
             insert_index + 1,
             Line(
@@ -540,8 +554,12 @@ def _backup_candidate(path: Path, clock: Callable[[], datetime] | None) -> Path:
 
 
 def _fsync_file(path: Path) -> None:
-    with open(path, "rb") as handle:
-        os.fsync(handle.fileno())
+    """尽力把备份刷到磁盘；fsync 失败不影响备份内容（复制已完成并关闭）。"""
+    try:
+        with open(path, "rb") as handle:
+            os.fsync(handle.fileno())
+    except OSError:
+        pass
 
 
 def _fsync_directory(directory: Path) -> None:
@@ -643,11 +661,11 @@ def _verify_written(path: Path, document: IniDocument, expected: bytes) -> None:
         current = parsed.get(key, section)
         if change.op is ChangeOp.SET:
             if current != change.value:
-                raise IniWriteError(  # pragma: no cover - 字节已一致，正常不可达
+                raise IniWriteError(  # pragma: no cover - 回读字节已一致时的防御分支
                     f"回读校验失败：{key} 期望 {change.value!r}，实际 {current!r}"
                 )
         elif current is not None:
-            raise IniWriteError(  # pragma: no cover - 字节已一致，正常不可达
+            raise IniWriteError(  # pragma: no cover - 回读字节已一致时的防御分支
                 f"回读校验失败：{key} 应已移除，实际仍为 {current!r}"
             )
 
@@ -684,9 +702,8 @@ def write_ini(
     *,
     clock: Callable[[], datetime] | None = None,
     backup: bool = True,
-    verify: bool = True,
 ) -> WriteResult:
-    """安全写入 ``document``。
+    """安全写入 ``document``（始终回读校验）。
 
     步骤：内容无变化则直接返回（不备份、不写盘）→ 备份 → 原子写入 → 回读校验；
     写入或校验失败时用写入前的原内容恢复并抛出 :class:`IniWriteError`。
@@ -718,8 +735,7 @@ def write_ini(
 
     try:
         write_bytes_atomic(target, data, mode=mode)
-        if verify:
-            _verify_written(target, document, data)
+        _verify_written(target, document, data)
     except BaseException as exc:  # 包括 KeyboardInterrupt：先恢复，再抛出
         error = _restore_after_failure(target, original, mode, exc, backup_path)
         raise error from exc

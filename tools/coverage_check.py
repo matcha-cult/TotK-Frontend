@@ -3,7 +3,8 @@
 覆盖率阈值在 M1 开始时确定（见 ``docs/design.md`` 第 12 节 I8）：语句覆盖率 ≥ 90%。
 "语句"由 AST 统计：每个 ``ast.stmt`` 计一条（模块/类/函数文档字符串、``if __name__ == "__main__"``
 块、标记 ``# pragma: no cover`` 的语句除外）；多行语句只要有一行被执行即视为已覆盖。
-"已执行行"由 :func:`sys.settrace` 在运行 ``tests/`` 时收集，因此测的是无头测试的真实覆盖。
+"已执行行"由 :func:`sys.settrace` 在运行 ``tests/`` 时收集，因此测的是无头测试的真实覆盖；
+测试未全部通过时本工具同样返回非 0，避免“覆盖率正常但测试失败”被误判为通过。
 
 用法::
 
@@ -104,15 +105,15 @@ def run_tests() -> unittest.TestResult:
     return runner.run(suite)
 
 
-def collect_coverage() -> tuple[dict[Path, list[tuple[int, int]]], set[tuple[Path, int]]]:
+def collect_coverage() -> tuple[dict[Path, list[tuple[int, int]]], set[tuple[Path, int]], bool]:
     tracer = _LineTracer()
     tracer.start()
     try:
-        run_tests()
+        result = run_tests()
     finally:
         tracer.stop()
     spans = {path: executable_statements(path) for path in sorted(PACKAGE_DIR.glob("*.py"))}
-    return spans, tracer.executed
+    return spans, tracer.executed, result.wasSuccessful()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -122,7 +123,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--show-missing", action="store_true", help="输出未覆盖语句的起始行号")
     args = parser.parse_args(argv)
 
-    statements, executed = collect_coverage()
+    statements, executed, tests_ok = collect_coverage()
 
     total_covered = 0
     total_statements = 0
@@ -153,6 +154,9 @@ def main(argv: list[str] | None = None) -> int:
         f"语句覆盖率：{total_covered}/{total_statements} = {percent:.2f}%"
         f"（阈值 {args.min:.2f}%）"
     )
+    if not tests_ok:
+        print("测试未全部通过：覆盖率不能作为通过依据。", file=sys.stderr)
+        return 1
     if percent < args.min:
         print("覆盖率低于阈值。", file=sys.stderr)
         return 1

@@ -171,6 +171,19 @@ class AtomicWriteTest(WriteTestBase):
         write_ini(self.path, doc, clock=fixed_clock)
         self.assertEqual(self.path.read_bytes(), b"[fps]\nfps_limit = 90")
 
+    def test_insert_without_final_newline_writes_valid_ini(self) -> None:
+        self.path.write_bytes(b"[audio]\nvolume = 100")
+        doc = IniDocument.from_path(self.path)
+        doc.set("audio_prefill_ms", "20", "audio")
+        write_ini(self.path, doc, clock=fixed_clock)
+        self.assertEqual(
+            self.path.read_bytes(),
+            b"[audio]\nvolume = 100\naudio_prefill_ms = 20\n",
+        )
+        reparsed = IniDocument.from_bytes(self.path.read_bytes())
+        self.assertEqual(reparsed.get("volume"), "100")
+        self.assertEqual(reparsed.get("audio_prefill_ms"), "20")
+
     def test_chinese_path_is_supported(self) -> None:
         directory = self.dir / "测试 目录"
         directory.mkdir()
@@ -258,6 +271,7 @@ class RollbackTest(WriteTestBase):
         self.assertFalse(self.path.exists())
         self.assertEqual(self.list_temp_files(), [])
 
+    @unittest.skipUnless(os.name == "posix", "文件权限位语义依赖 POSIX")
     def test_restore_keeps_file_mode(self) -> None:
         original = b"[fps]\nfps_limit = 60\n"
         self.path.write_bytes(original)
@@ -271,9 +285,11 @@ class RollbackTest(WriteTestBase):
         self.assertEqual(self.path.read_bytes(), original)
 
 
-@unittest.skipIf(os.geteuid() == 0, "root 用户不受目录权限限制")
+@unittest.skipUnless(os.name == "posix", "只读目录测试依赖 POSIX 权限语义")
 class ReadOnlyDirectoryTest(WriteTestBase):
     def test_readonly_directory_fails_without_touching_original(self) -> None:
+        if hasattr(os, "geteuid") and os.geteuid() == 0:
+            self.skipTest("root 用户不受目录权限限制")
         original = b"[fps]\nfps_limit = 60\n"
         self.path.write_bytes(original)
         doc = IniDocument.from_path(self.path)

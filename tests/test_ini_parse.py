@@ -62,8 +62,20 @@ class ParseTest(unittest.TestCase):
         doc = IniDocument.from_text(fixture_text("duplicates.ini"))
         self.assertEqual(doc.get("fps_limit"), "120")
         self.assertEqual(doc.get("realtime"), "0")
-        duplicates = {(item.section, item.key): item.count for item in doc.duplicates()}
-        self.assertEqual(duplicates, {("frame rate", "fps_limit"): 2, ("frame rate", "realtime"): 2})
+        duplicates = {item.key: (item.count, item.sections) for item in doc.duplicates()}
+        self.assertEqual(
+            duplicates,
+            {"fps_limit": (2, ("frame rate",)), "realtime": (2, ("frame rate",))},
+        )
+
+    def test_duplicates_across_sections_are_counted(self) -> None:
+        doc = IniDocument.from_text("[a]\nx = 1\n[b]\nx = 2\n")
+        duplicates = doc.duplicates()
+        self.assertEqual(len(duplicates), 1)
+        self.assertEqual(duplicates[0].key, "x")
+        self.assertEqual(duplicates[0].count, 2)
+        self.assertEqual(duplicates[0].sections, ("a", "b"))
+        self.assertEqual(doc.get("x"), "2")
 
     def test_unknown_keys_and_sections_are_preserved(self) -> None:
         self.assertEqual(self.doc.get("unknown_future_key", "display"), "keep-me")

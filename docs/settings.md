@@ -78,6 +78,9 @@
 | `walk_key` / `walk_scale` | `lshift` / `0.51` | 键名 / 0.2–0.9 | 键盘走路（按住减速） | 即时 | P2 |
 | `bind_<A\|B\|X\|Y\|L\|R\|ZL\|ZR\|PLUS\|MINUS\|LEFT\|UP\|RIGHT\|DOWN\|LCLICK\|RCLICK>` | 见键表 | `pad:<name>, key:<name>, ...` 或 `none` | 改键；F1 菜单也会写这些行 | 即时 | P0（只读/由 F1 管理，启动器可展示） |
 
+> 模式键补充：公开示例还包含摇杆方向键（`bind_LSTICK_LEFT`、`bind_RSTICK_UP` 等）与 `bind_SHAKE`，
+> 注册表按此枚举；`[performance]` 的 `bind_skip` 是优化开关，不是按键绑定，按未知键保留、不参与校验。
+
 ## 5. `[audio]` 声音
 
 | 键 | 默认 | 范围/取值 | 说明 | 生效 | 级别 |

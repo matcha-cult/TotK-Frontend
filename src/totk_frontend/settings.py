@@ -21,6 +21,8 @@ from dataclasses import dataclass
 from enum import Enum
 
 __all__ = [
+    "BIND_KEYS",
+    "BIND_NAMES",
     "ValueType",
     "Effect",
     "Priority",
@@ -94,6 +96,21 @@ SECTION_LABELS = {
     "language": "语言",
     "performance": "性能/诊断",
 }
+
+#: ``bind_*`` 的合法按键名（小写）。
+#: 来源：docs/settings.md 第 4 节列出的手柄按钮，加上 totk.ini.example 中的摇杆方向键与 SHAKE。
+#: 注意 ``[performance]`` 的 ``bind_skip`` 是优化开关，不是按键绑定；未知键一律保留但不校验。
+BIND_BUTTON_NAMES: tuple[str, ...] = (
+    "a", "b", "x", "y", "l", "r", "zl", "zr", "plus", "minus",
+    "left", "up", "right", "down", "lclick", "rclick",
+)
+BIND_DIRECTION_NAMES: tuple[str, ...] = tuple(
+    f"{stick}_{direction}"
+    for stick in ("lstick", "rstick")
+    for direction in ("left", "up", "right", "down")
+)
+BIND_NAMES: tuple[str, ...] = BIND_BUTTON_NAMES + BIND_DIRECTION_NAMES + ("shake",)
+BIND_KEYS: tuple[str, ...] = tuple(f"bind_{name}" for name in BIND_NAMES)
 
 
 @dataclass(frozen=True)
@@ -695,12 +712,8 @@ _BY_KEY: dict[str, Setting] = {setting.key.lower(): setting for setting in SETTI
 _PATTERNS: tuple[Setting, ...] = tuple(setting for setting in SETTINGS if setting.is_pattern)
 
 
-def _pattern_regex(key: str) -> re.Pattern[str]:
-    return re.compile("^" + re.escape(key).replace(r"\*", r"[a-z0-9_]+") + "$")
-
-
 _PATTERN_REGEX: dict[str, re.Pattern[str]] = {
-    setting.key: _pattern_regex(setting.key) for setting in _PATTERNS
+    "bind_*": re.compile(r"^(?:" + "|".join(re.escape(key) for key in BIND_KEYS) + r")$")
 }
 
 
