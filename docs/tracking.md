@@ -86,7 +86,7 @@
 | ID | 任务 | 状态 | 产物 | 验收 |
 |---|---|---|---|---|
 | M5-T1 | 检测规则与结果模型 | `DONE` | `src/totk_frontend/install.py` | `tests/test_install.py` 通过：完整安装无结论；缺可执行为错误、缺 `totk.ini` 为警告、缺 `totk-install.json` 为提示、缺 `exefs/`/`romfs/` 为警告且说明不提供游戏数据；错误排在最前；`--dir` 检测时 CLI 打印结论与建议 |
-| M5-T2 | 首次引导页 | `TODO` | `gui`/`cli` | 不改动任何游戏文件；复用 `format_install_report` |
+| M5-T2 | 首次引导页 | `DOING` | `gui`/`cli` | 不改动任何游戏文件；复用 `format_install_report` |
 | M5-T3 | 版本感知（1.1.0/1.2.1/1.4.3 差异） | `DONE` | `src/totk_frontend/versions.py` | `tests/test_versions.py` 通过：三代版本能力与文档一致；`fov`/`menu_cursor` 仅 1.4.3；`unsupported_keys`、`key_supported_in`、`describe_version` 覆盖已知与未知版本；合成安装记录可识别版本，非 `主.次.修订`、非 JSON、无版本字段、超出扫描深度均返回未知 |
 
 ### M6 打包与发布
