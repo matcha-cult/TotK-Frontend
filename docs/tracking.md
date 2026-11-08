@@ -77,8 +77,9 @@
 | 项 | 结果 |
 |---|---|
 | 环境检查 | Python 3.14.10 通过；tkinter 9.0 通过；仓库布局通过 |
-| 首次测试 | 8 个用例失败：`Path.write_text` 在 Windows 把 `\n` 转成 `\r\n`，断言按字节写死 `\n`；另有 1 处误用 `as_posix()`；**修正后模拟 CRLF 平台全量通过** |
-| GUI 启动 | 首次运行无输出、无窗口，需 `--smoke` 与 stderr 诊断复现定位 |
+| 首次测试 | 8 个用例失败：`Path.write_text` 在 Windows 把 `\n` 转成 `\r\n`，断言按字节写死 `\n`；另有 1 处误用 `as_posix()` |
+| 修正后复测 | `tools/check_env.py --run-tests`：**353 个用例通过、失败 0、跳过 4**（POSIX 专属用例按预期跳过），环境检查 4 项全通过 |
+| GUI 启动 | `python -m totk_frontend.gui` 输出 `Tk 9.0`、安装目录与启动提示；窗口视觉与交互待截图确认 |
 
 ### M5 安装检测与引导
 
