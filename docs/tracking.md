@@ -42,8 +42,8 @@
 |---|---|---|---|---|
 | M1-T1 | `totk.ini` 解析器（节/键/注释/保序/大小写不敏感） | `DONE` | `src/totk_frontend/ini.py` | `tests/test_ini_parse.py`、`tests/test_ini_edit.py` 通过；覆盖保序、注释/空行/未知行保留、大小写不敏感、重复键后者生效、CRLF/BOM/无末尾换行 |
 | M1-T2 | 写入器（备份、原子写、只改目标行、回滚） | `DONE` | 同上 | `tests/test_ini_write.py` 通过；覆盖备份命名与重名、原子替换、只改目标行、回读校验、失败回滚、只读目录、中文路径、临时文件清理；公开示例 `totk.ini.example` 的临时副本核对：仅目标行变化、其余字节一致 |
-| M1-T3 | 设置注册表（类型/范围/默认/中文标签/生效时机/暴露级别） | `DOING` | `settings.py` | 键表与 `settings.md` 一致 |
-| M1-T4 | 校验器（单键 + 跨字段规则） | `DOING` | `validate.py` | 规则用例通过 |
+| M1-T3 | 设置注册表（类型/范围/默认/中文标签/生效时机/暴露级别） | `DONE` | `src/totk_frontend/settings.py` | `tests/test_settings.py` 解析 `docs/settings.md` 键表逐项核对通过：节的归属、默认值、范围文本、生效时机、暴露级别、中文标签一致；`bind_*` 以模式项登记；`free_cores`、`replay_async` 作为文档第 7/9 节引用键登记 |
+| M1-T4 | 校验器（单键 + 跨字段规则） | `DONE` | `src/totk_frontend/validate.py` | `tests/test_validate.py` 通过：覆盖布尔/整数/小数/枚举/分辨率/键名/绑定/文本的单键校验，以及第 8 节全部 8 条跨字段规则、版本限制与未知键忽略 |
 | M1-T5 | 单元测试与测试数据（不含游戏数据） | `DOING` | `tests/` | 可无头运行 |
 
 ### M2 预设与诊断
