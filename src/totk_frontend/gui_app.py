@@ -224,7 +224,14 @@ def run(tk, args: argparse.Namespace, *, smoke: bool = False) -> int:  # noqa: A
             return self.session.dirty or bool(self._ui_changes())
 
         def _refresh_status(self) -> None:
+            directory = Path(self.dir_var.get() or ".")
+            install = detect_install(directory)
+            version = detect_version(directory)
             text = self.session.status_text()
+            if not install.looks_like_install:
+                text = "未检测到 TotK Recomp 安装（点“检测 / 重载”查看缺失项） · " + text
+            elif version.version is None:
+                text = "安装记录中没有可识别的版本 · " + text
             extra = self._ui_changes()
             if extra:
                 text += f" · 界面有 {len(extra)} 项修改未保存"
