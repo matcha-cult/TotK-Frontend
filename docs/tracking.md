@@ -68,9 +68,9 @@
 
 | ID | 任务 | 状态 | 产物 | 验收 |
 |---|---|---|---|---|
-| M4-T1 | 窗口骨架、安装目录栏、状态栏 | `REVIEW` | `src/totk_frontend/gui.py`、`gui_app.py` | 无 tkinter 时 `main` 返回 1 并给出 CLI 命令（`tests/test_gui.py` 通过，已加 `TclError` 兜底）；窗口本身待在带 tkinter 的 Windows 上验收 |
-| M4-T2 | 画面/声音/控制/鼠标/高级/日志页 | `REVIEW` | 同上 | 六个设置页 + 日志页均由 `SECTION_ORDER`/`settings_in_section` 生成，控件按 `ValueType` 生成；新增键无需改 UI 代码；待实机确认滚动与中文显示 |
-| M4-T3 | 预设、保存、恢复默认、备份、启动按钮 | `REVIEW` | 同上 | 全部复用核心库（`session`/`presets`/`write_ini`/`create_backup`/`install`），与 CLI 同一实现；按钮行为待实机验收 |
+| M4-T1 | 窗口骨架、安装目录栏、状态栏 | `DONE` | `src/totk_frontend/gui.py`、`gui_app.py` | 无 tkinter 时 `main` 返回 1 并给出 CLI 命令（`tests/test_gui.py` 通过，含 `TclError` 兜底）；Windows 11 + Python 3.14.10 + Tk 9.0 实机：窗口标题、安装目录栏、检测/重载、7 个页签、底部按钮组、状态栏、滚动条均正常显示，无文字截断或重叠 |
+| M4-T2 | 画面/声音/控制/鼠标/高级/日志页 | `DONE` | 同上 | 六个设置页 + 日志页均由 `SECTION_ORDER`/`settings_in_section` 生成，控件按 `ValueType` 生成；实机截图核对：帧率页 4 行与注册表一致（标签→控件→生效时机→范围提示），中文显示正常，页签顺序与注册表节顺序一致 |
+| M4-T3 | 预设、保存、恢复默认、备份、启动按钮 | `REVIEW` | 同上 | 保存链路已实机验收：新建目录中改 `fps_limit=120`、`volume=80` 保存，生成的 `totk.ini` 与预期逐字节一致、首次新建无备份、回读值正确；跨字段规则（`fps_limit>60` 且 `realtime=0`）由实机与无头测试双重确认会拦截且不改文件。预设备份/恢复默认/启动按钮与 150% DPI 待补充确认 |
 
 ### M4 实机验收记录（Windows 11 + Python 3.14.10 + Tk 9.0）
 
