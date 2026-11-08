@@ -59,10 +59,10 @@
 
 | ID | 任务 | 状态 | 产物 | 验收 |
 |---|---|---|---|---|
-| M3-T1 | 命令框架与 `detect` | `DOING` | `cli.py`、`__main__.py` | `--help` 可用 |
-| M3-T2 | `list/get/set/unset` | `DOING` | 同上 | 读写结果正确 |
-| M3-T3 | `preset/apply/backup/restore` | `DOING` | 同上 | 回滚可用 |
-| M3-T4 | `launch/log/version` | `DOING` | 同上 | 不启动游戏也能测 |
+| M3-T1 | 命令框架与 `detect` | `DONE` | `src/totk_frontend/cli.py`、`__main__.py`、`install.py` | `tests/test_cli.py`、`tests/test_install.py` 通过：`python -m totk_frontend` 可用，13 个命令均有 `--help`；`detect` 打印每个标记存在/缺失，无安装目录或标记不全时退出码 1 且不崩溃 |
+| M3-T2 | `list/get/set/unset` | `DONE` | 同上 | 测试通过：读写结果与默认值正确、键名大小写不敏感、缺 `totk.ini` 时读默认值、非法值/未知键退出码 1 且不写盘、`set` 可新建文件、`unset` 移除激活行并恢复默认 |
+| M3-T3 | `preset/apply/backup/restore` | `DONE` | 同上 | 测试通过：`--dry-run` 不写盘并输出差异预览；`apply` 只写差异集且幂等；`backup` 命名符合约定；`restore` 恢复前备份当前文件并可恢复原字节；无效备份报错 |
+| M3-T4 | `launch/log/version` | `DONE` | 同上 | 测试通过：`launch --dry-run` 只打印命令，另用假 `totk` 脚本验证真实启动路径；`log` 支持 `--tail`/`--path`/自动探测并处理缺失与读取失败；`version` 输出注册表信息；全程不启动真实游戏 |
 
 ### M4 GUI
 
