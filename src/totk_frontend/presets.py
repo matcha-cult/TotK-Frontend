@@ -15,8 +15,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .ini import IniDocument
 from .settings import get_setting
-from .validate import Issue, Severity, validate_value
+from .validate import Issue, Severity, validate_document, validate_value
 
 __all__ = [
     "FORBIDDEN_VALUES",
@@ -27,6 +28,12 @@ __all__ = [
     "preset_names",
     "validate_preset",
     "validate_presets",
+    "PlannedChange",
+    "PresetPlan",
+    "plan_preset",
+    "apply_preset",
+    "revert_plan",
+    "format_plan",
 ]
 
 #: 任何预设都不得写入的键值组合（已知会导致崩溃或关闭关键功能）。
@@ -170,3 +177,179 @@ def validate_presets() -> list[Issue]:
     for preset in PRESETS:
         issues.extend(validate_preset(preset))
     return issues
+
+
+# ---------------------------------------------------------------------- 应用
+
+
+@dataclass(frozen=True)
+class PlannedChange:
+    """预设计划中的一项改动。"""
+
+    key: str
+    section: str
+    old_value: str | None
+    new_value: str
+
+
+@dataclass(frozen=True)
+class PresetPlan:
+    """预设的差异计划；``plan_preset`` 的结果即 dry-run 预览。"""
+
+    preset: Preset
+    version: str | None
+    changes: tuple[PlannedChange, ...]
+    unchanged: tuple[str, ...]
+    skipped: tuple[tuple[str, str], ...]
+    warnings: tuple[Issue, ...]
+
+    @property
+    def is_empty(self) -> bool:
+        return not self.changes
+
+
+def _resolve_preset(preset: Preset | str) -> Preset:
+    if isinstance(preset, Preset):
+        return preset
+    if isinstance(preset, str):
+        resolved = get_preset(preset)
+        if resolved is None:
+            raise ValueError(f"未知预设：{preset!r}；可用：{'、'.join(preset_names())}")
+        return resolved
+    raise TypeError("preset 必须是 Preset 或预设名称字符串")
+
+
+def _setting_section(key: str) -> str:
+    setting = get_setting(key)
+    if setting is None:  # pragma: no cover - 预设定义已通过校验
+        raise ValueError(f"预设使用了未注册的键：{key}")
+    return setting.section
+
+
+def _apply_changes(document: IniDocument, changes: tuple[PlannedChange, ...]) -> None:
+    for change in changes:
+        if change.old_value is not None:
+            # 键本来就在文件中：改最后一个生效行，不强行挪到注册表节。
+            document.set(change.key, change.new_value)
+        else:
+            document.set(change.key, change.new_value, change.section)
+
+
+def plan_preset(
+    document: IniDocument,
+    preset: Preset | str,
+    *,
+    version: str | None = None,
+) -> PresetPlan:
+    """计算预设与当前文档的差异（dry-run，不修改文档）。
+
+    - 只产生目标值不同的项；已是目标值（含默认值即目标值）的项不计入改动；
+    - 带版本限制的项在 ``version`` 不适用时跳过；
+    - ``warnings`` 是对“应用后文档”运行 ``validate_document`` 的结果，供预览提示。
+    """
+    if not isinstance(document, IniDocument):
+        raise TypeError("document 必须是 IniDocument")
+    target_preset = _resolve_preset(preset)
+    if version is not None and not isinstance(version, str):
+        raise TypeError("version 必须是字符串或 None")
+
+    changes: list[PlannedChange] = []
+    unchanged: list[str] = []
+    skipped: list[tuple[str, str]] = []
+    for entry in target_preset.entries:
+        setting = get_setting(entry.key)
+        if setting is None:  # pragma: no cover - 预设定义已通过校验
+            raise ValueError(f"预设使用了未注册的键：{entry.key}")
+        if entry.versions and version is not None and version not in entry.versions:
+            skipped.append(
+                (entry.key, f"仅适用于 TotK Recomp {'、'.join(entry.versions)}")
+            )
+            continue
+        target_value = entry.value.strip()
+        current = document.get(entry.key)
+        if current is not None:
+            if current.strip() == target_value:
+                unchanged.append(entry.key)
+                continue
+        elif setting.default is not None and setting.default.strip() == target_value:
+            unchanged.append(entry.key)
+            continue
+        changes.append(
+            PlannedChange(
+                key=entry.key,
+                section=setting.section,
+                old_value=current,
+                new_value=target_value,
+            )
+        )
+
+    simulated = IniDocument.from_bytes(document.to_bytes())
+    _apply_changes(simulated, tuple(changes))
+    warnings = tuple(validate_document(simulated, version=version))
+    return PresetPlan(
+        preset=target_preset,
+        version=version,
+        changes=tuple(changes),
+        unchanged=tuple(unchanged),
+        skipped=tuple(skipped),
+        warnings=warnings,
+    )
+
+
+def apply_preset(
+    document: IniDocument,
+    preset: Preset | str,
+    *,
+    version: str | None = None,
+) -> PresetPlan:
+    """把预设应用到文档（内存中），返回可回滚的计划。
+
+    落盘请使用 :func:`totk_frontend.ini.write_ini`，它会备份、原子替换并回读校验。
+    """
+    plan = plan_preset(document, preset, version=version)
+    _apply_changes(document, plan.changes)
+    return plan
+
+
+def revert_plan(document: IniDocument, plan: PresetPlan) -> int:
+    """按计划回滚预设：恢复原有值，原本没有激活行的键用 ``unset`` 移除；返回回滚项数。
+
+    说明：应用预设时新建的空节头不会删除（与 design 第 12 节 I5 一致）；预设未涉及的键不受影响。
+    """
+    if not isinstance(document, IniDocument):
+        raise TypeError("document 必须是 IniDocument")
+    if not isinstance(plan, PresetPlan):
+        raise TypeError("plan 必须是 PresetPlan")
+    for change in plan.changes:
+        if change.old_value is None:
+            document.unset(change.key)
+        else:
+            document.set(change.key, change.old_value)
+    return len(plan.changes)
+
+
+def format_plan(plan: PresetPlan) -> str:
+    """把计划格式化为可读文本（供 CLI --dry-run / GUI 预览使用）。"""
+    if not isinstance(plan, PresetPlan):
+        raise TypeError("plan 必须是 PresetPlan")
+    lines = [f"预设：{plan.preset.label}（{plan.preset.name}）"]
+    if plan.version is None:
+        lines.append("目标版本：未指定（按最新版处理带版本限制的项）")
+    else:
+        lines.append(f"目标版本：TotK Recomp {plan.version}")
+    if not plan.changes:
+        lines.append("无需改动。")
+    else:
+        lines.append(f"将修改 {len(plan.changes)} 项：")
+        for change in plan.changes:
+            old = change.old_value if change.old_value is not None else "（默认）"
+            lines.append(f"  {change.key}: {old} -> {change.new_value}")
+    if plan.unchanged:
+        lines.append(f"已是目标值：{'、'.join(plan.unchanged)}")
+    for key, reason in plan.skipped:
+        lines.append(f"跳过 {key}：{reason}")
+    if plan.warnings:
+        lines.append("预览提示：")
+        for issue in plan.warnings:
+            lines.append(f"  {issue}")
+    return "\n".join(lines)
