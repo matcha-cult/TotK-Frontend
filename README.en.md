@@ -52,8 +52,9 @@ Classification rules and the pre-commit checklist are in [docs/DOC-POLICY.md](do
 - M2: presets and `doctor` diagnostics — done
 - M3: command-line tool (detect/list/get/set/preset/doctor/launch/log, etc.) — done
 - M5: install detection and version awareness — in progress (detection and version awareness done, guidance page pending)
-- M4: GUI (tkinter, six settings pages plus a log page) — implemented, awaiting on-device verification on Windows
-- From M5: install guidance, packaging (see [docs/plan.md](docs/plan.md))
+- M4: GUI (tkinter, six settings pages plus a log page) — done, verified on Windows
+- M5: install detection, version awareness and first-run guidance — done
+- From M6: packaging and release preparation (see [docs/plan.md](docs/plan.md))
 
 ## Running
 

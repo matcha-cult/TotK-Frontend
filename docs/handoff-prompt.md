@@ -8,7 +8,7 @@
 
 ## 你的目标
 
-在现有仓库 **TotK-Frontend** 中，按 `docs/plan.md` 的里程碑推进，先完成 **M4 的实机验收与 M5（安装检测与首次引导）**。本项目是 TotK Recomp 的启动器/配置前台，不重编译、不模拟、不改游戏文件。
+在现有仓库 **TotK-Frontend** 中，按 `docs/plan.md` 的里程碑推进，完成 **M4 剩余实机补测** 并推进 **M6（打包与发布准备）**。本项目是 TotK Recomp 的启动器/配置前台，不重编译、不模拟、不改游戏文件。
 
 ## 开始前必读（按顺序）
 
@@ -21,8 +21,8 @@
 
 ## 当前状态
 
-- M0（脚手架与文档）、M1（核心库）、M2（预设与 `doctor`）、M3（CLI）已完成；M4（GUI）实现完成、处于 `REVIEW`，等待 Windows 实机验收；M5 的检测与版本感知已完成，引导页（`M5-T2`）待做。验收记录见 `docs/tracking.md`。
-- 已有模块：`src/totk_frontend/{ini,settings,validate,presets,doctor,install,versions,cli,session,gui,gui_app}.py` + `__main__.py`；
+- M0–M3、M5 已完成；M4 处于 `REVIEW`（窗口、设置页、保存链路已实机验收，预设/恢复默认/备份/启动按钮与 150% DPI 待补测）。验收记录见 `docs/tracking.md`。
+- 已有模块：`src/totk_frontend/{ini,settings,validate,presets,doctor,install,versions,onboarding,cli,session,gui,gui_app}.py` + `__main__.py`；
   `tests/` 全部为无头测试（`tests/_bootstrap.py` 把 `src/` 加入导入路径）；
   `tools/coverage_check.py` 统计语句覆盖率（阈值 90%，测试失败时返回非 0；`gui_app.py` 按 I8 排除）。
 - CLI 已可用：`python -m totk_frontend <命令>`；GUI 入口：`python -m totk_frontend.gui`（需要 tkinter）。
@@ -35,8 +35,10 @@
 
 | ID | 任务 | 验收 |
 |---|---|---|
-| M4 验收 | 在 Windows 上运行 `py -3 -m totk_frontend.gui` | 无安装目录不崩溃；六页可切换；保存后重开值保留；预设/恢复默认/备份/启动可用；中文与 DPI 正常 |
-| M5-T2 | 首次引导页 | 复用 `install.format_install_report`；只提示，不代跑安装器、不下载任何内容；不改动游戏文件 |
+| M4-T3 补测 | 在 Windows 上运行 GUI | 预设应用（含 dry-run 提示）、恢复默认、备份按钮、启动按钮、150% DPI 排版 |
+| M6-T1 | 打包（Windows 优先） | 用独立的构建 venv 装 PyInstaller，产出免装 Python 的发布包；干净机器可运行 |
+| M6-T2 | 发布检查单 | `docs/release-checklist.md` 逐项通过 |
+| M6-T3 | 许可证与第三方声明 | 决策 D3 已定；`LICENSE`、`THIRD_PARTY_NOTICES.md` 齐备 |
 
 布局与页面参考 `docs/design.md` 第 9 节的文字线框；设置项标注“立即生效/需重启”（`Setting.effect_label`），暴露级别用 `Setting.priority`。
 

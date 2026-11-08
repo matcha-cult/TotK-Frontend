@@ -10,7 +10,12 @@ import _bootstrap  # noqa: F401  确保可以导入 src/totk_frontend
 
 import contextlib
 import io
+import sys
+import tempfile
+import types
 import unittest
+from pathlib import Path
+from unittest import mock
 
 from totk_frontend import gui
 
@@ -83,6 +88,82 @@ class GuiAppModuleTest(unittest.TestCase):
         parser = gui.build_parser()
         args = parser.parse_args(["--version", "1.2.1"])
         self.assertEqual(gui._resolve_version(args, __import__("pathlib").Path(".")), "1.2.1")
+
+
+class FakeTkinterTest(unittest.TestCase):
+    """用假的 tkinter 模块覆盖“有 tkinter”的代码路径（不创建真实窗口）。"""
+
+    def setUp(self) -> None:
+        self.fake = types.ModuleType("tkinter")
+        self.fake.TkVersion = 8.6
+
+    def test_tkinter_available_true(self) -> None:
+        with mock.patch.dict(sys.modules, {"tkinter": self.fake}):
+            self.assertTrue(gui.tkinter_available())
+
+    def test_main_with_tkinter_delegates_to_gui_app(self) -> None:
+        with mock.patch.dict(sys.modules, {"tkinter": self.fake}):
+            with mock.patch("totk_frontend.gui_app.run", return_value=0) as run:
+                stdout, stderr = io.StringIO(), io.StringIO()
+                with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                    code = gui.main(["--dir", "somewhere"])
+        self.assertEqual(code, 0)
+        run.assert_called_once()
+        _tk_arg, args_arg = run.call_args.args[0], run.call_args.args[1]
+        self.assertIs(_tk_arg, self.fake)
+        self.assertEqual(str(args_arg.dir), "somewhere")
+        self.assertIn("Tk 8.6", stderr.getvalue())
+
+    def test_initial_directory_falls_back_to_cwd_with_install(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            install = root / "TotK Recomp"
+            install.mkdir()
+            (install / "totk.exe").write_text("", encoding="utf-8")
+            (install / "totk.ini").write_text("", encoding="utf-8")
+            nested = install / "mods"
+            nested.mkdir()
+            previous = Path.cwd()
+            try:
+                import os
+
+                os.chdir(nested)
+                parser = gui.build_parser()
+                args = parser.parse_args([])
+                self.assertEqual(gui._initial_directory(args), install)
+            finally:
+                import os
+
+                os.chdir(previous)
+
+    def test_initial_directory_falls_back_to_cwd_without_install(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            previous = Path.cwd()
+            try:
+                import os
+
+                os.chdir(directory)
+                parser = gui.build_parser()
+                args = parser.parse_args([])
+                self.assertEqual(gui._initial_directory(args), Path.cwd())
+            finally:
+                import os
+
+                os.chdir(previous)
+
+    def test_resolve_version_detects_from_install_record(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "totk-install.json").write_text('{"version": "1.2.1"}', encoding="utf-8")
+            parser = gui.build_parser()
+            args = parser.parse_args([])
+            self.assertEqual(gui._resolve_version(args, root), "1.2.1")
+
+    def test_resolve_version_none_without_record(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            parser = gui.build_parser()
+            args = parser.parse_args([])
+            self.assertIsNone(gui._resolve_version(args, Path(directory)))
 
 
 class NoTkinterFallbackTest(unittest.TestCase):

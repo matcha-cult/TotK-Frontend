@@ -36,6 +36,7 @@ COMMANDS = (
     "doctor",
     "launch",
     "log",
+    "guide",
     "version",
 )
 
@@ -522,6 +523,60 @@ class LogErrorTest(CliTestBase):
         code, _, stderr = self.run_cli("log", "--path", str(directory))
         self.assertEqual(code, 1)
         self.assertIn("读取日志失败", stderr)
+
+
+class GuideCommandTest(CliTestBase):
+    def setUp(self) -> None:
+        super().setUp()
+        (self.install / "exefs").mkdir()
+        (self.install / "romfs").mkdir()
+        (self.install / "totk-install.json").write_text('{"version": "1.4.3"}', encoding="utf-8")
+
+    def test_guide_for_ready_install(self) -> None:
+        code, output, _ = self.run_cli("guide", "--dir", str(self.install))
+        self.assertEqual(code, 0)
+        self.assertIn("TotK Frontend 首次引导", output)
+        self.assertIn("1.4.3", output)
+        self.assertIn("[已完成]", output)
+        self.assertIn("[说明] 开始游戏", output)
+        self.assertIn("下一步：可以直接开始游戏", output)
+
+    def test_guide_for_empty_directory(self) -> None:
+        empty = self.root / "empty"
+        empty.mkdir()
+        code, output, _ = self.run_cli("guide", "--dir", str(empty))
+        self.assertEqual(code, 1)
+        self.assertIn("选择 TotK Recomp 安装目录", output)
+        self.assertIn("[错误]", output)
+
+    def test_guide_blocks_on_config_errors(self) -> None:
+        self.ini.write_text("[performance]\nfree_cores = 1\n", encoding="utf-8")
+        code, output, _ = self.run_cli("guide", "--dir", str(self.install))
+        self.assertEqual(code, 1)
+        self.assertIn("free_cores", output)
+        self.assertIn("检查配置", output)
+
+    def test_guide_does_not_modify_files(self) -> None:
+        before = sorted((p.name, p.read_bytes()) for p in self.install.iterdir() if p.is_file())
+        self.run_cli("guide", "--dir", str(self.install))
+        after = sorted((p.name, p.read_bytes()) for p in self.install.iterdir() if p.is_file())
+        self.assertEqual(before, after)
+
+    def test_guide_without_directory(self) -> None:
+        empty = self.root / "empty"
+        empty.mkdir()
+        self.chdir(empty)
+        code, output, _ = self.run_cli("guide")
+        self.assertEqual(code, 1)
+        self.assertIn("未检测到", output)
+        self.assertIn("guide --dir", output)
+
+    def test_guide_explicit_version(self) -> None:
+        code, output, _ = self.run_cli(
+            "guide", "--dir", str(self.install), "--version", "1.2.1"
+        )
+        self.assertEqual(code, 0)
+        self.assertIn("TotK Recomp 1.2.1", output)
 
 
 class VersionCommandTest(CliTestBase):

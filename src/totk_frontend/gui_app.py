@@ -18,6 +18,7 @@ from pathlib import Path
 from .gui import _initial_directory, _resolve_version
 from .ini import IniError, create_backup
 from .install import detect_install, detect_version, format_install_report
+from .onboarding import build_guide, format_guide, needs_guidance
 from .presets import PRESETS, format_plan, get_preset
 from .session import EditingSession
 from .settings import SECTION_LABELS, SECTION_ORDER, get_setting, settings_in_section
@@ -74,6 +75,13 @@ def run(tk, args: argparse.Namespace, *, smoke: bool = False) -> int:  # noqa: A
             self._build()
             self.root.protocol("WM_DELETE_WINDOW", self._on_close)
             self._refresh_status()
+            if not smoke:  # 自检模式不弹引导对话框
+                self.root.after(200, self._maybe_show_guide)
+
+        def _maybe_show_guide(self) -> None:
+            """首次启动且未检测到安装目录时，自动给出引导（只提示，不改文件）。"""
+            if needs_guidance(self.directory):
+                self._on_guide()
 
         # ------------------------------------------------------------ 初始化
         def _ini_path(self) -> Path:
@@ -119,6 +127,7 @@ def run(tk, args: argparse.Namespace, *, smoke: bool = False) -> int:  # noqa: A
             ttk.Button(bottom, text="保存", command=self._on_save).pack(side="left", padx=(12, 4))
             ttk.Button(bottom, text="恢复默认", command=self._on_reset).pack(side="left")
             ttk.Button(bottom, text="备份", command=self._on_backup).pack(side="left", padx=4)
+            ttk.Button(bottom, text="首次引导", command=self._on_guide).pack(side="left", padx=4)
             ttk.Button(bottom, text="启动游戏", command=self._on_launch).pack(side="left")
             ttk.Button(bottom, text="退出", command=self._on_close).pack(side="right")
 
@@ -244,6 +253,24 @@ def run(tk, args: argparse.Namespace, *, smoke: bool = False) -> int:  # noqa: A
                 return
             self.dir_var.set(chosen)
             self._reload_for_directory(Path(chosen))
+
+        def _show_text_dialog(self, title: str, content: str, width: int = 760, height: int = 480) -> None:
+            dialog = tk.Toplevel(self.root)
+            dialog.title(title)
+            dialog.geometry(f"{width}x{height}")
+            text = tk.Text(dialog, wrap="word")
+            scrollbar = ttk.Scrollbar(dialog, orient="vertical", command=text.yview)
+            text.configure(yscrollcommand=scrollbar.set)
+            text.insert("1.0", content)
+            text.configure(state="disabled")
+            text.pack(side="left", fill="both", expand=True, padx=8, pady=8)
+            scrollbar.pack(side="right", fill="y", pady=8)
+
+        def _on_guide(self) -> None:
+            """首次引导：只读检查并给出分步指引，不修改任何文件。"""
+            directory = Path(self.dir_var.get() or ".").expanduser()
+            state = build_guide(directory, version=self.version)
+            self._show_text_dialog("首次引导", format_guide(state))
 
         def _on_detect(self) -> None:
             directory = Path(self.dir_var.get() or ".").expanduser()

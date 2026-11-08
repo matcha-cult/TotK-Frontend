@@ -29,6 +29,7 @@ from .install import (
     find_install,
     install_findings,
 )
+from .onboarding import build_guide, format_guide
 from .presets import PRESETS, apply_preset, format_plan, get_preset, plan_preset
 from .settings import SECTION_ORDER, SETTINGS, get_setting
 from .validate import SEVERITY_LABELS, Severity, validate_value
@@ -361,6 +362,19 @@ def cmd_log(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_guide(args: argparse.Namespace) -> int:
+    explicit = getattr(args, "dir", None)
+    directory = Path(explicit) if explicit is not None else find_install(Path.cwd())
+    if directory is None:
+        print("未检测到 TotK Recomp 安装目录。")
+        print("用法：totk-frontend guide --dir <安装目录>")
+        print("提示：该目录应包含 totk.exe/totk 与 totk.ini（或 exefs/、romfs/）。")
+        return EXIT_USER_ERROR
+    state = build_guide(directory, version=args.version)
+    print(format_guide(state))
+    return EXIT_OK if state.ok else EXIT_USER_ERROR
+
+
 def cmd_version(args: argparse.Namespace) -> int:
     print(f"totk-frontend {__version__}")
     print(f"设置注册表：{len(SETTINGS)} 项，{len(SECTION_ORDER)} 节")
@@ -442,6 +456,11 @@ def build_parser() -> argparse.ArgumentParser:
     log_parser.add_argument("--path", type=Path, metavar="文件", help="直接指定日志文件")
     log_parser.add_argument("--tail", type=int, default=80, metavar="行数", help="显示最后 N 行（默认 80）")
     log_parser.set_defaults(handler=cmd_log)
+
+    guide_parser = subparsers.add_parser("guide", help="首次引导：分步检查安装目录与配置")
+    guide_parser.add_argument("--dir", type=Path, metavar="目录", help="TotK Recomp 安装目录")
+    guide_parser.add_argument("--version", metavar="版本", help="TotK Recomp 版本（如 1.4.3）")
+    guide_parser.set_defaults(handler=cmd_guide)
 
     version_parser = subparsers.add_parser("version", help="显示版本与注册表信息")
     version_parser.set_defaults(handler=cmd_version)

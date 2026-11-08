@@ -52,8 +52,9 @@ TotK Frontend 是为 [TotK Recomp](https://github.com/valentderah/totk-pc-recomp
 - M2：预设系统与 `doctor` 诊断 —— 已完成
 - M3：命令行工具（detect/list/get/set/preset/doctor/launch/log 等）—— 已完成
 - M5：安装检测与版本感知 —— 进行中（检测与版本感知已完成，引导页待做）
-- M4：图形界面（tkinter，六页设置 + 日志页）—— 实现完成，等待 Windows 实机验收
-- M5 起：安装引导、打包（详见 [docs/plan.md](docs/plan.md)）
+- M4：图形界面（tkinter，六页设置 + 日志页）—— 已完成（Windows 实机验收通过）
+- M5：安装检测、版本感知与首次引导 —— 已完成
+- M6 起：打包与发布准备（详见 [docs/plan.md](docs/plan.md)）
 
 ## 运行方式
 

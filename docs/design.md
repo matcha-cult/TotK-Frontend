@@ -145,13 +145,14 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 | `install` | `InstallInfo`、`detect_install`、`find_install`、标记常量 | 只读标记检测 |
 | `install` | `FindingLevel`、`InstallFinding`、`install_findings`、`format_install_report`、`VersionDetection`、`detect_version` | 缺失项可解释；版本识别尽力而为（失败返回未知，不猜测） |
 | `versions` | `KNOWN_VERSIONS`、`VERSION_NOTES`、`get_version_note`、`key_supported_in`、`unsupported_keys`、`describe_version` | 1.1.0/1.2.1/1.4.3 的能力差异与版本限定键说明 |
+| `onboarding` | `GuideStep`、`GuideState`、`build_guide`、`format_guide`、`needs_guidance` | 首次引导：只读分步检查；CLI `guide` 与 GUI 共用同一文案 |
 | `cli` | `main`、`build_parser`、`CliError`、退出码常量 | `python -m totk_frontend` 入口；不依赖 GUI |
 | `session` | `EditingSession`、`PendingChange` | GUI 的无头状态层：待保存修改、暂存文档、保存与预设暂存 |
 | `gui` | `tkinter_available`、`build_parser`、`main`、`NO_TK_MESSAGE` | 入口与无 tkinter 回退；不导入 tkinter 也可测试 |
 | `gui_app` | `run(tk, args)` | tkinter 窗口实现；依赖显示环境，不计入无头覆盖率 |
 
 验证命令：`python -m unittest discover -s tests -v`、`python -m compileall src`、`python tools/coverage_check.py`
-（语句覆盖率阈值 90%，M1 验收时为 99.07%，M2 时为 98.65%，M3 时为 98.94%，M5 检测/版本部分为 99.05%，M4 时为 98.78%）。M2 的 `presets` 只能使用注册表中的键，`doctor` 复用
+（语句覆盖率阈值 90%，M1 验收时为 99.07%，M2 时为 98.65%，M3 时为 98.94%，M4 时为 98.78%，M5 时为 99.20%）。M2 的 `presets` 只能使用注册表中的键，`doctor` 复用
 `validate` 的稳定规则码（`rule.*`、`value.*`）。
 
 ## 14. M2 实现决定（记录）
@@ -186,7 +187,8 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 | L2 | `totk.ini` 缺失只算警告（可按默认值继续）；`totk-install.json` 缺失只算提示；`exefs/`、`romfs/` 缺失为警告且明确“本工具不提供、不下载任何游戏数据” | 不写获取游戏文件的说明 |
 | L3 | 版本识别只读 `totk-install.json`，在字段名属于版本类、值形如 `主.次.修订` 时采用 | 上游安装记录格式尚未核对，识别失败返回未知；不猜测、不推断 |
 | L4 | 版本知识集中在 `versions.py`：能力说明来自 `design.md` 第 8 节与 `settings.md` 的版本标注 | `menu_cursor`、`fov` 仅 1.4.3；1.1.0 鼠标为摇杆模拟 |
-| L5 | 首次引导页在 M5-T2 实现：CLI 用 `format_install_report`，GUI 复用同一文本 | 引导只提示，不代跑安装器、不下载任何内容 |
+| L5 | 首次引导由 `onboarding.py` 提供：`build_guide` 生成 5 步（选择目录 / 确认 totk.ini / 确认版本 / 检查配置 / 开始游戏），CLI `guide` 与 GUI 对话框共用 `format_guide`；GUI 在未通过检测时自动弹出 | 引导只提示，不代跑安装器、不下载任何内容，且不改动任何文件（有“引导前后目录快照一致”测试） |
+| L6 | 引导的“下一步”只计算前 4 个待办步骤；第 5 步为说明性步骤（`informational=True`） | 避免“开始游戏”永远显示待完成 |
 
 ## 17. M4 实现决定（记录）
 
