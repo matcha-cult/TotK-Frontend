@@ -17,7 +17,7 @@
 | 里程碑 | 状态 | 进入下一阶段的条件 |
 |---|---|---|
 | M0 | `DONE` | 全部 M0 任务 `DONE`，初始提交已推送 |
-| M1 | `DONE` | M0 完成 |
+| M1 | `DOING` | M0 完成；独立审查修正完成后恢复 `DONE` |
 | M2 | `TODO` | M1 完成 |
 | M3 | `TODO` | M2 完成 |
 | M4 | `TODO` | M3 完成 |
@@ -45,6 +45,7 @@
 | M1-T3 | 设置注册表（类型/范围/默认/中文标签/生效时机/暴露级别） | `DONE` | `src/totk_frontend/settings.py` | `tests/test_settings.py` 解析 `docs/settings.md` 键表逐项核对通过：节的归属、默认值、范围文本、生效时机、暴露级别、中文标签一致；`bind_*` 以模式项登记；`free_cores`、`replay_async` 作为文档第 7/9 节引用键登记 |
 | M1-T4 | 校验器（单键 + 跨字段规则） | `DONE` | `src/totk_frontend/validate.py` | `tests/test_validate.py` 通过：覆盖布尔/整数/小数/枚举/分辨率/键名/绑定/文本的单键校验，以及第 8 节全部 8 条跨字段规则、版本限制与未知键忽略 |
 | M1-T5 | 单元测试与测试数据（不含游戏数据） | `DONE` | `tests/`、`tools/coverage_check.py` | `python -m unittest discover -s tests -v` 全部用例通过、`python -m compileall src` 通过；`python tools/coverage_check.py` 语句覆盖率 99.32%（阈值 90%）；测试数据为手写合成样本，不含游戏数据；CRLF/BOM/无末尾换行在测试运行时生成 |
+| M1-T6 | 独立审查修正（写入拼接、`bind_*` 模式、校验健壮性、测试与文档同步） | `DOING` | 见验收记录 | 独立审查发现的问题逐项修复并有回归测试；单元测试、编译、覆盖率检查通过 |
 
 ### M2 预设与诊断
 
@@ -52,7 +53,7 @@
 |---|---|---|---|---|
 | M2-T1 | 预设定义（Savage Wind 风格 / 手柄 / 性能 / 画质） | `TODO` | `presets.py` | 只含已注册键 |
 | M2-T2 | 预设应用、dry-run、回滚 | `TODO` | 同上 | 差异集正确 |
-| M2-T3 | `doctor` 诊断规则 | `TODO` | 规则表 | 覆盖 `settings.md` 第 4 节 |
+| M2-T3 | `doctor` 诊断规则 | `TODO` | 规则表 | 覆盖 `settings.md` 第 8 节 |
 
 ### M3 CLI
 
