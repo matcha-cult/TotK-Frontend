@@ -53,7 +53,7 @@
 |---|---|---|---|---|
 | M2-T1 | 预设定义（Savage Wind 风格 / 手柄 / 性能 / 画质） | `DONE` | `src/totk_frontend/presets.py` | `tests/test_presets.py` 通过：4 个预设与 `settings.md` 第 9 节“必须包含”一致；全部键已注册、值通过单键校验、无 `free_cores=1`/`mouse_sens=0`；`menu_cursor` 标注仅 1.4.3 |
 | M2-T2 | 预设应用、dry-run、回滚 | `DONE` | 同上 | `tests/test_presets.py` 通过：`plan_preset` 只给差异集且不改文档（dry-run）；`apply_preset` 只改目标键、幂等；版本过滤生效；`revert_plan` 恢复原值并移除新增键（应用时新建的空节头保留，与 I5 一致）；经 `write_ini` 落盘后可回滚到原字节；`format_plan` 输出可读预览 |
-| M2-T3 | `doctor` 诊断规则 | `DOING` | 规则表 | 覆盖 `settings.md` 第 8 节 |
+| M2-T3 | `doctor` 诊断规则 | `DONE` | `src/totk_frontend/doctor.py` | `tests/test_doctor.py` 通过：规则表与 `settings.md` 第 8 节 8 条规则一一对应且每条可触发；未知键只汇总不校验；重复键、版本限制、严重级别排序均有覆盖；`format_report` 输出中文建议与结论；诊断只读 |
 
 ### M3 CLI
 
