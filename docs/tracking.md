@@ -51,7 +51,7 @@
 
 | ID | 任务 | 状态 | 产物 | 验收 |
 |---|---|---|---|---|
-| M2-T1 | 预设定义（Savage Wind 风格 / 手柄 / 性能 / 画质） | `DOING` | `presets.py` | 只含已注册键 |
+| M2-T1 | 预设定义（Savage Wind 风格 / 手柄 / 性能 / 画质） | `DONE` | `src/totk_frontend/presets.py` | `tests/test_presets.py` 通过：4 个预设与 `settings.md` 第 9 节“必须包含”一致；全部键已注册、值通过单键校验、无 `free_cores=1`/`mouse_sens=0`；`menu_cursor` 标注仅 1.4.3 |
 | M2-T2 | 预设应用、dry-run、回滚 | `DOING` | 同上 | 差异集正确 |
 | M2-T3 | `doctor` 诊断规则 | `DOING` | 规则表 | 覆盖 `settings.md` 第 8 节 |
 
