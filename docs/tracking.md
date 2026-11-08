@@ -18,7 +18,7 @@
 |---|---|---|
 | M0 | `DONE` | 全部 M0 任务 `DONE`，初始提交已推送 |
 | M1 | `DONE` | M0 完成；独立审查修正（`M1-T6`）已完成 |
-| M2 | `TODO` | M1 完成 |
+| M2 | `DOING` | M1 完成 |
 | M3 | `TODO` | M2 完成 |
 | M4 | `TODO` | M3 完成 |
 | M5 | `TODO` | M3 完成（可与 M4 并行，但写作用域不得重叠） |
@@ -51,9 +51,9 @@
 
 | ID | 任务 | 状态 | 产物 | 验收 |
 |---|---|---|---|---|
-| M2-T1 | 预设定义（Savage Wind 风格 / 手柄 / 性能 / 画质） | `TODO` | `presets.py` | 只含已注册键 |
-| M2-T2 | 预设应用、dry-run、回滚 | `TODO` | 同上 | 差异集正确 |
-| M2-T3 | `doctor` 诊断规则 | `TODO` | 规则表 | 覆盖 `settings.md` 第 8 节 |
+| M2-T1 | 预设定义（Savage Wind 风格 / 手柄 / 性能 / 画质） | `DOING` | `presets.py` | 只含已注册键 |
+| M2-T2 | 预设应用、dry-run、回滚 | `DOING` | 同上 | 差异集正确 |
+| M2-T3 | `doctor` 诊断规则 | `DOING` | 规则表 | 覆盖 `settings.md` 第 8 节 |
 
 ### M3 CLI
 
