@@ -12,6 +12,11 @@ from totk_frontend.ini import IniDocument
 from totk_frontend.session import EditingSession, PendingChange
 from totk_frontend.validate import Severity
 
+def write_text_raw(path: Path, text: str) -> None:
+    """按字节写入，避免 Windows 文本模式把 \\n 转成 \\r\\n（与测试断言保持一致）。"""
+    path.write_bytes(text.encode("utf-8"))
+
+
 DEFAULT_INI = """# 手写合成样本
 [frame rate]
 fps_limit = 30
@@ -28,7 +33,7 @@ class SessionBase(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         self.root = Path(self._tmp.name)
         self.path = self.root / "totk.ini"
-        self.path.write_text(DEFAULT_INI, encoding="utf-8")
+        write_text_raw(self.path, DEFAULT_INI)
 
     def session(self, *, version: str | None = None) -> EditingSession:
         return EditingSession.load(self.path, version=version)
@@ -104,7 +109,7 @@ class PendingEditTest(SessionBase):
         staged = session.staged_document()
         self.assertEqual(staged.get("volume"), "80")
         self.assertEqual(session.document.get("volume"), "100")
-        self.assertEqual(staged.source, self.path.as_posix())
+        self.assertEqual(staged.source, str(self.path))
         self.assertEqual(self.path.read_text(encoding="utf-8"), DEFAULT_INI)
 
     def test_staged_document_keeps_untouched_bytes(self) -> None:

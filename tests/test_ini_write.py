@@ -32,6 +32,15 @@ def fixture_text(name: str) -> str:
     return (FIXTURES / name).read_text(encoding="utf-8")
 
 
+def write_text_raw(path: Path, text: str) -> None:
+    """按字节写入，保留 \\n 原样。
+
+    ``Path.write_text`` 在 Windows 上会把 ``\n`` 转成 ``\r\n``（文本模式的平台默认），
+    本文件多数用例需要断言语义上的“仅目标行变化”，因此显式写字节以与平台无关。
+    """
+    path.write_bytes(text.encode("utf-8"))
+
+
 def fixed_clock() -> datetime:
     return datetime(2026, 11, 8, 21, 56, 53)
 
@@ -53,7 +62,7 @@ class WriteTestBase(unittest.TestCase):
 
     def write_sample(self, name: str = "sample.ini") -> IniDocument:
         text = fixture_text(name)
-        self.path.write_text(text, encoding="utf-8")
+        write_text_raw(self.path, text)
         return IniDocument.from_path(self.path)
 
     def list_temp_files(self) -> list[str]:
@@ -85,7 +94,7 @@ class BackupTest(WriteTestBase):
         self.assertEqual(len(self.list_backups()), 1)
 
     def test_backup_name_collision_gets_suffix(self) -> None:
-        self.path.write_text("[a]\na = 1\n", encoding="utf-8")
+        write_text_raw(self.path, "[a]\na = 1\n")
         first = IniDocument.from_path(self.path)
         first.set("a", "2")
         result_one = write_ini(self.path, first, clock=fixed_clock)
@@ -111,7 +120,7 @@ class BackupTest(WriteTestBase):
         self.assertEqual(self.list_backups(), [])
 
     def test_backup_can_be_disabled(self) -> None:
-        self.path.write_text("[a]\na = 1\n", encoding="utf-8")
+        write_text_raw(self.path, "[a]\na = 1\n")
         doc = IniDocument.from_path(self.path)
         doc.set("a", "2")
         result = write_ini(self.path, doc, backup=False, clock=fixed_clock)
@@ -188,7 +197,7 @@ class AtomicWriteTest(WriteTestBase):
         directory = self.dir / "测试 目录"
         directory.mkdir()
         target = directory / "totk.ini"
-        target.write_text("[audio]\nvolume = 100\n", encoding="utf-8")
+        write_text_raw(target, "[audio]\nvolume = 100\n")
         doc = IniDocument.from_path(target)
         doc.set("volume", "80", "audio")
         result = write_ini(target, doc, clock=fixed_clock)
@@ -217,7 +226,7 @@ class AtomicWriteTest(WriteTestBase):
         self.assertEqual(self.list_temp_files(), [])
 
     def test_read_ini_reads_written_file(self) -> None:
-        self.path.write_text("[fps]\nfps_limit = 60\n", encoding="utf-8")
+        write_text_raw(self.path, "[fps]\nfps_limit = 60\n")
         doc = read_ini(self.path)
         self.assertEqual(doc.get("fps_limit"), "60")
 
@@ -226,7 +235,7 @@ class AtomicWriteTest(WriteTestBase):
             write_ini(self.path, "not a document")  # type: ignore[arg-type]
 
     def test_unset_is_written_and_verified(self) -> None:
-        self.path.write_text("[input]\nmotion = 1\nrumble = 1\n", encoding="utf-8")
+        write_text_raw(self.path, "[input]\nmotion = 1\nrumble = 1\n")
         doc = IniDocument.from_path(self.path)
         doc.unset("motion", "input")
         write_ini(self.path, doc, clock=fixed_clock)

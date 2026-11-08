@@ -41,6 +41,33 @@ class GuiAppModuleTest(unittest.TestCase):
         self.assertIn("图形界面", parser.description or "")
         args = parser.parse_args(["--dir", "x", "--version", "1.4.3"])
         self.assertEqual(args.version, "1.4.3")
+        self.assertFalse(args.smoke)
+
+    def test_smoke_flag(self) -> None:
+        args = gui.build_parser().parse_args(["--smoke"])
+        self.assertTrue(args.smoke)
+
+    def test_smoke_summary_format(self) -> None:
+        from totk_frontend import gui_app
+
+        class FakeRoot:
+            def title(self) -> str:
+                return "TotK Frontend"
+
+        class FakeNotebook:
+            def tabs(self) -> tuple:
+                return ("a", "b")
+
+        class FakeApp:
+            root = FakeRoot()
+            notebook = FakeNotebook()
+            vars = {"k": 1}
+            status_var = type("S", (), {"get": lambda _self: "就绪"})()
+
+        summary = gui_app._smoke_summary(FakeApp())
+        self.assertIn("页签=2", summary)
+        self.assertIn("设置控件=1", summary)
+        self.assertIn("就绪", summary)
 
     def test_initial_directory_prefers_ini_parent(self) -> None:
         parser = gui.build_parser()

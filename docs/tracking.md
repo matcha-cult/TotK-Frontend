@@ -70,7 +70,15 @@
 |---|---|---|---|---|
 | M4-T1 | 窗口骨架、安装目录栏、状态栏 | `REVIEW` | `src/totk_frontend/gui.py`、`gui_app.py` | 无 tkinter 时 `main` 返回 1 并给出 CLI 命令（`tests/test_gui.py` 通过，已加 `TclError` 兜底）；窗口本身待在带 tkinter 的 Windows 上验收 |
 | M4-T2 | 画面/声音/控制/鼠标/高级/日志页 | `REVIEW` | 同上 | 六个设置页 + 日志页均由 `SECTION_ORDER`/`settings_in_section` 生成，控件按 `ValueType` 生成；新增键无需改 UI 代码；待实机确认滚动与中文显示 |
-| M4-T3 | 预设、保存、恢复默认、备份、启动按钮 | `REVIEW` | 同上 | 全部复用核心库（`session`/`presets`/`write_ini`/`create_backup`/`install`），与 CLI 同一实现；状态层有 351 个测试覆盖；按钮行为待实机验收 |
+| M4-T3 | 预设、保存、恢复默认、备份、启动按钮 | `REVIEW` | 同上 | 全部复用核心库（`session`/`presets`/`write_ini`/`create_backup`/`install`），与 CLI 同一实现；按钮行为待实机验收 |
+
+### M4 实机验收记录（Windows 11 + Python 3.14.10 + Tk 9.0）
+
+| 项 | 结果 |
+|---|---|
+| 环境检查 | Python 3.14.10 通过；tkinter 9.0 通过；仓库布局通过 |
+| 首次测试 | 8 个用例失败：`Path.write_text` 在 Windows 把 `\n` 转成 `\r\n`，断言按字节写死 `\n`；另有 1 处误用 `as_posix()`；**修正后模拟 CRLF 平台全量通过** |
+| GUI 启动 | 首次运行无输出、无窗口，需 `--smoke` 与 stderr 诊断复现定位 |
 
 ### M5 安装检测与引导
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import _bootstrap  # noqa: F401  确保可以导入 src/totk_frontend
 
+import os
 import unittest
 from pathlib import Path
 
@@ -144,7 +145,9 @@ class SetMissingKeyTest(unittest.TestCase):
     def test_insert_without_final_newline_after_header(self) -> None:
         doc = IniDocument.from_text("[audio]")
         doc.set("volume", "100", "audio")
-        self.assertEqual(doc.render(), "[audio]\nvolume = 100\n")
+        # 源文本没有任何换行时，无法推断文件风格，插入行使用平台默认换行（design I3）。
+        nl = os.linesep
+        self.assertEqual(doc.render(), f"[audio]{nl}volume = 100{nl}")
 
     def test_insert_without_final_newline_after_comment(self) -> None:
         doc = IniDocument.from_text("[audio]\n# 说明")

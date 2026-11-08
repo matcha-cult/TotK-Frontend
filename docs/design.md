@@ -201,4 +201,10 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 | M7 | 无 tkinter 时 `main` 返回 1 并提示 CLI 命令；有 tkinter 但无显示时捕获 `TclError` 给出同样提示 | 实机验收前无法在本开发机验证窗口 |
 | M9 | Windows 上启动时尽力开启 Per-Monitor DPI 感知（`ctypes` + `try/except`），失败静默跳过 | 不引入对 Windows API 的硬依赖；非 Windows 平台无影响 |
 | M10 | Python 3.14 自带的 Tk 9.0 与 Python 3.11 的 Tk 8.6 都支持；仅使用 `ttk` 标准控件 | 实机验收记录两套 Tk 的显示差异 |
+| M11 | GUI 提供 `--smoke`：创建窗口、刷新一次、打印页签/控件/状态栏摘要后退出，不写任何文件 | 无交互环境也能确认窗口与控件是否建成 |
+| M12 | 窗口启动、构造失败、运行期异常都会输出到 stderr 并打印堆栈，避免“静默退出” | 便于在 Windows 实机定位问题 |
+
+测试可移植性约定（`tests/`）：需要按字节比对 ``\n`` 的用例必须用 ``write_bytes``/``newline=""`` 写样本，
+不能用 ``Path.write_text``（Windows 文本模式会把 ``\n`` 转成 ``\r\n``）；涉及“源文本无换行、插入行使用平台默认”
+的用例用 ``os.linesep`` 构造期望值。
 | M8 | `gui_app.py` 从无头覆盖率统计中排除，原因与范围记录在 I8 | 窗口代码无法在无头环境执行 |

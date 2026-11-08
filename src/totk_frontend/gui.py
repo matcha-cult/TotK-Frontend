@@ -60,6 +60,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dir", type=Path, metavar="目录", help="TotK Recomp 安装目录")
     parser.add_argument("--ini", type=Path, metavar="文件", help="直接指定 totk.ini 路径")
     parser.add_argument("--version", metavar="版本", help="TotK Recomp 版本（如 1.4.3）")
+    parser.add_argument(
+        "--smoke",
+        action="store_true",
+        help="窗口自检：创建窗口、刷新一次并打印控件摘要后立即退出（不写任何文件）",
+    )
     return parser
 
 
@@ -70,9 +75,15 @@ def main(argv: list[str] | None = None) -> int:
     except ImportError:
         print(NO_TK_MESSAGE, file=sys.stderr)
         return 1
+    print(
+        f"TotK Frontend GUI：Tk {getattr(tk, 'TkVersion', '?')}，"
+        f"安装目录={_initial_directory(args)}",
+        file=sys.stderr,
+        flush=True,
+    )
     from . import gui_app
 
-    return gui_app.run(tk, args)
+    return gui_app.run(tk, args, smoke=args.smoke)
 
 
 if __name__ == "__main__":  # pragma: no cover - 模块入口

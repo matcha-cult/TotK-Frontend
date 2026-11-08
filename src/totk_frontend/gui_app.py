@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+import traceback
 from pathlib import Path
 
 from .gui import _initial_directory, _resolve_version
@@ -46,7 +47,16 @@ def _enable_dpi_awareness() -> bool:
         return False
 
 
-def run(tk, args: argparse.Namespace) -> int:  # noqa: ANN001 - tkinter 模块
+def _smoke_summary(app) -> str:  # noqa: ANN001 - Application 实例
+    """生成窗口自检摘要（供 --smoke 使用，便于在无交互环境确认控件已创建）。"""
+    tabs = len(app.notebook.tabs())
+    return (
+        f"窗口标题={app.root.title()!r} 页签={tabs} 设置控件={len(app.vars)} "
+        f"状态栏={app.status_var.get()!r}"
+    )
+
+
+def run(tk, args: argparse.Namespace, *, smoke: bool = False) -> int:  # noqa: ANN001 - tkinter 模块
     from tkinter import filedialog, messagebox, ttk
 
     class Application:
@@ -385,7 +395,30 @@ def run(tk, args: argparse.Namespace) -> int:  # noqa: ANN001 - tkinter 模块
             file=sys.stderr,
         )
         return 1
-    app.run()
+    except Exception:  # 构造窗口时的任何异常都要可见，避免“静默退出”
+        print("创建主窗口失败，详细信息：", file=sys.stderr)
+        traceback.print_exc()
+        return 1
+
+    if smoke:
+        try:
+            app.root.update_idletasks()
+            app.root.update()
+        except Exception:
+            print("窗口自检失败，详细信息：", file=sys.stderr)
+            traceback.print_exc()
+            return 1
+        print("窗口自检通过：" + _smoke_summary(app), flush=True)
+        app.root.destroy()
+        return 0
+
+    print("图形界面已启动，关闭窗口即退出。", file=sys.stderr, flush=True)
+    try:
+        app.run()
+    except Exception:
+        print("窗口运行期间出错，详细信息：", file=sys.stderr)
+        traceback.print_exc()
+        return 1
     return 0
 
 
