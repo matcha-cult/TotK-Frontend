@@ -52,7 +52,23 @@ TotK Frontend 是为 [TotK Recomp](https://github.com/valentderah/totk-pc-recomp
 - M2：预设系统与 `doctor` 诊断 —— 已完成
 - M3：命令行工具（detect/list/get/set/preset/doctor/launch/log 等）—— 已完成
 - M5：安装检测与版本感知 —— 进行中（检测与版本感知已完成，引导页待做）
-- M4 起：GUI、安装引导、打包（详见 [docs/plan.md](docs/plan.md)）
+- M4：图形界面（tkinter，六页设置 + 日志页）—— 实现完成，等待 Windows 实机验收
+- M5 起：安装引导、打包（详见 [docs/plan.md](docs/plan.md)）
+
+## 运行方式
+
+需要 Python 3.11+，仅使用标准库；图形界面需要 tkinter（官方 python.org 安装包自带）。
+
+```bash
+# 命令行
+PYTHONPATH=src python -m totk_frontend --help
+PYTHONPATH=src python -m totk_frontend doctor --dir <安装目录>
+
+# 图形界面（需要 tkinter 与桌面环境）
+PYTHONPATH=src python -m totk_frontend.gui
+```
+
+Windows 上用 `set PYTHONPATH=src`（PowerShell 为 `$env:PYTHONPATH = "src"`），并把 `python` 换成 `py -3` 或解释器完整路径即可，无需修改系统 PATH。
 
 ## 参考项目
 

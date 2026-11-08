@@ -5,6 +5,8 @@
 块、标记 ``# pragma: no cover`` 的语句除外）；多行语句只要有一行被执行即视为已覆盖。
 "已执行行"由 :func:`sys.settrace` 在运行 ``tests/`` 时收集，因此测的是无头测试的真实覆盖；
 测试未全部通过时本工具同样返回非 0，避免“覆盖率正常但测试失败”被误判为通过。
+依赖显示环境的窗口模块（``EXCLUDED_FILES``，目前是 ``gui_app.py``）不计入阈值，
+其入口、探测与回退提示在 ``gui.py`` 中仍被统计。
 
 用法::
 
@@ -26,6 +28,10 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = ROOT / "src"
 PACKAGE_DIR = SRC_DIR / "totk_frontend"
 TESTS_DIR = ROOT / "tests"
+
+#: 依赖显示环境、无法在无头环境执行的模块（见 docs/design.md 第 12 节 I8）。
+#: 这些模块的入口与回退路径在 ``gui.py`` 中，仍计入覆盖率。
+EXCLUDED_FILES: frozenset[str] = frozenset({"gui_app.py"})
 
 
 def _is_docstring(node: ast.stmt) -> bool:
@@ -112,7 +118,11 @@ def collect_coverage() -> tuple[dict[Path, list[tuple[int, int]]], set[tuple[Pat
         result = run_tests()
     finally:
         tracer.stop()
-    spans = {path: executable_statements(path) for path in sorted(PACKAGE_DIR.glob("*.py"))}
+    spans = {
+        path: executable_statements(path)
+        for path in sorted(PACKAGE_DIR.glob("*.py"))
+        if path.name not in EXCLUDED_FILES
+    }
     return spans, tracer.executed, result.wasSuccessful()
 
 
@@ -141,6 +151,9 @@ def main(argv: list[str] | None = None) -> int:
         total_covered += len(covered)
         rows.append((path, spans, missing))
 
+    excluded = sorted(EXCLUDED_FILES)
+    if args.verbose and excluded:
+        print(f"（按约定排除依赖显示环境的模块：{'、'.join(excluded)}）")
     if args.verbose or args.show_missing:
         width = max((len(path.name) for path, _, _ in rows), default=10)
         for path, spans, missing in rows:

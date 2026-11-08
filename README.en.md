@@ -52,7 +52,23 @@ Classification rules and the pre-commit checklist are in [docs/DOC-POLICY.md](do
 - M2: presets and `doctor` diagnostics — done
 - M3: command-line tool (detect/list/get/set/preset/doctor/launch/log, etc.) — done
 - M5: install detection and version awareness — in progress (detection and version awareness done, guidance page pending)
-- From M4: GUI, install guidance, packaging (see [docs/plan.md](docs/plan.md))
+- M4: GUI (tkinter, six settings pages plus a log page) — implemented, awaiting on-device verification on Windows
+- From M5: install guidance, packaging (see [docs/plan.md](docs/plan.md))
+
+## Running
+
+Requires Python 3.11+ and the standard library only; the GUI needs tkinter (bundled with the official python.org installer).
+
+```bash
+# Command line
+PYTHONPATH=src python -m totk_frontend --help
+PYTHONPATH=src python -m totk_frontend doctor --dir <install-dir>
+
+# GUI (needs tkinter and a desktop session)
+PYTHONPATH=src python -m totk_frontend.gui
+```
+
+On Windows use `set PYTHONPATH=src` (PowerShell: `$env:PYTHONPATH = "src"`) and substitute `py -3` or the full interpreter path for `python`; no system PATH changes are needed.
 
 ## Reference projects
 

@@ -8,7 +8,7 @@
 
 ## 你的目标
 
-在现有仓库 **TotK-Frontend** 中，按 `docs/plan.md` 的里程碑推进，先完成 **M4（GUI：tkinter 窗口与设置页）**。本项目是 TotK Recomp 的启动器/配置前台，不重编译、不模拟、不改游戏文件。
+在现有仓库 **TotK-Frontend** 中，按 `docs/plan.md` 的里程碑推进，先完成 **M4 的实机验收与 M5（安装检测与首次引导）**。本项目是 TotK Recomp 的启动器/配置前台，不重编译、不模拟、不改游戏文件。
 
 ## 开始前必读（按顺序）
 
@@ -21,23 +21,22 @@
 
 ## 当前状态
 
-- M0（脚手架与文档）、M1（核心库）、M2（预设与 `doctor`）、M3（CLI）已完成，验收记录见 `docs/tracking.md`。
-- 已有模块：`src/totk_frontend/{ini,settings,validate,presets,doctor,install,cli}.py` + `__main__.py`；
+- M0（脚手架与文档）、M1（核心库）、M2（预设与 `doctor`）、M3（CLI）已完成；M4（GUI）实现完成、处于 `REVIEW`，等待 Windows 实机验收；M5 的检测与版本感知已完成，引导页（`M5-T2`）待做。验收记录见 `docs/tracking.md`。
+- 已有模块：`src/totk_frontend/{ini,settings,validate,presets,doctor,install,versions,cli,session,gui,gui_app}.py` + `__main__.py`；
   `tests/` 全部为无头测试（`tests/_bootstrap.py` 把 `src/` 加入导入路径）；
-  `tools/coverage_check.py` 统计语句覆盖率（阈值 90%，测试失败时同样返回非 0）。
-- CLI 已可用：`python -m totk_frontend <命令>`（`PYTHONPATH=src`）。
-- **当前开发机没有 tkinter**（见 `private/` 本地记录，勿写入 `docs/`）：GUI 无法在本机直接运行；
-  请把可测试的状态/逻辑与 Tk 控件分离，GUI 冒烟测试在 Windows 或其他带 tkinter 的环境由玩家执行。
-- 写 `totk.ini` 一律走 `ini.write_ini`；预设用 `presets.plan_preset/apply_preset/revert_plan`；
-  诊断用 `doctor.diagnose/format_report`；启动/日志复用 `install` 与 CLI 的既有逻辑（必要时抽取共享函数）。
+  `tools/coverage_check.py` 统计语句覆盖率（阈值 90%，测试失败时返回非 0；`gui_app.py` 按 I8 排除）。
+- CLI 已可用：`python -m totk_frontend <命令>`；GUI 入口：`python -m totk_frontend.gui`（需要 tkinter）。
+- **当前开发机没有 tkinter**（见 `private/` 本地记录，勿写入 `docs/`）：GUI 窗口无法在本机运行，
+  只能在带 tkinter 的桌面环境验收；状态层 `session.py` 可无头测试。
+- 写 `totk.ini` 一律走 `ini.write_ini`；GUI 修改先经过 `session.EditingSession`；预设用 `presets`；
+  诊断用 `doctor.diagnose/format_report`；安装检测与版本用 `install.detect_install/detect_version` 与 `versions`。
 
 ## 下一步任务（M4）
 
 | ID | 任务 | 验收 |
 |---|---|---|
-| M4-T1 | 窗口骨架、安装目录栏、状态栏 | 无 tkinter 时给出明确提示并建议 CLI；启动不崩溃 |
-| M4-T2 | 画面/声音/控制/鼠标/高级/日志页 | 所有页面由注册表驱动，新增键无需改 UI 代码 |
-| M4-T3 | 预设、保存、恢复默认、备份、启动按钮 | 与 CLI 结果一致（同一核心库）；未保存修改有提示；保存后状态栏刷新 |
+| M4 验收 | 在 Windows 上运行 `py -3 -m totk_frontend.gui` | 无安装目录不崩溃；六页可切换；保存后重开值保留；预设/恢复默认/备份/启动可用；中文与 DPI 正常 |
+| M5-T2 | 首次引导页 | 复用 `install.format_install_report`；只提示，不代跑安装器、不下载任何内容；不改动游戏文件 |
 
 布局与页面参考 `docs/design.md` 第 9 节的文字线框；设置项标注“立即生效/需重启”（`Setting.effect_label`），暴露级别用 `Setting.priority`。
 

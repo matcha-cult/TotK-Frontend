@@ -20,7 +20,7 @@
 | M1 | `DONE` | M0 完成；独立审查修正（`M1-T6`）已完成 |
 | M2 | `DONE` | M1 完成；全部 M2 任务 `DONE` |
 | M3 | `DONE` | M2 完成；全部 M3 任务 `DONE` |
-| M4 | `DOING` | M3 完成 |
+| M4 | `REVIEW` | M3 完成；等待 Windows 实机验收 |
 | M5 | `DOING` | M3 完成（可与 M4 并行，但写作用域不得重叠） |
 | M6 | `TODO` | M4、M5 完成 |
 
@@ -68,9 +68,9 @@
 
 | ID | 任务 | 状态 | 产物 | 验收 |
 |---|---|---|---|---|
-| M4-T1 | 窗口骨架、安装目录栏、状态栏 | `DOING` | `gui.py` | 无 tkinter 时提示 |
-| M4-T2 | 画面/声音/控制/鼠标/高级/日志页 | `DOING` | 同上 | 注册表驱动 |
-| M4-T3 | 预设、保存、恢复默认、备份、启动按钮 | `DOING` | 同上 | 与 CLI 一致 |
+| M4-T1 | 窗口骨架、安装目录栏、状态栏 | `REVIEW` | `src/totk_frontend/gui.py`、`gui_app.py` | 无 tkinter 时 `main` 返回 1 并给出 CLI 命令（`tests/test_gui.py` 通过，已加 `TclError` 兜底）；窗口本身待在带 tkinter 的 Windows 上验收 |
+| M4-T2 | 画面/声音/控制/鼠标/高级/日志页 | `REVIEW` | 同上 | 六个设置页 + 日志页均由 `SECTION_ORDER`/`settings_in_section` 生成，控件按 `ValueType` 生成；新增键无需改 UI 代码；待实机确认滚动与中文显示 |
+| M4-T3 | 预设、保存、恢复默认、备份、启动按钮 | `REVIEW` | 同上 | 全部复用核心库（`session`/`presets`/`write_ini`/`create_backup`/`install`），与 CLI 同一实现；状态层有 351 个测试覆盖；按钮行为待实机验收 |
 
 ### M5 安装检测与引导
 

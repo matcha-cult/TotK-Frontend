@@ -1,6 +1,6 @@
 # 设计（design）
 
-> 状态：M4 待开始（GUI 采用 `tkinter`），M5 进行中。M1–M3 已交付；M5 的检测与版本感知已完成，引导页待做。实现约定见第 12、14、15、16 节，核心库接口见第 13 节。实现细节在对应里程碑中细化，变更须同步 `plan.md` 与 `tracking.md`。
+> 状态：M4 实现完成、等待 Windows 实机验收；M5 的检测与版本感知已完成，引导页待做。M1–M3 已交付。实现约定见第 12、14、15、16、17 节，核心库接口见第 13 节。实现细节在对应里程碑中细化，变更须同步 `plan.md` 与 `tracking.md`。
 
 ## 1. 背景
 
@@ -126,7 +126,7 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 | I5 | `unset`（恢复默认）语义：移除该键的全部激活行，保留注释行；不删除节 | 对应第 7 节第 5 条 |
 | I6 | 备份命名 `totk.ini.bak-YYYYmmdd-HHMMSS`（同目录）；同一秒内重名时追加 `-2`、`-3`… | 备份保留，不自动清理 |
 | I7 | 回读校验：写入后重新读取字节并逐键核对本次改动；失败时用写入前的原内容原子恢复并报错；新建文件校验失败时删除本次新建的文件 | 备份在任何情况下都不删除；只读文件在 POSIX 上可被原子替换（目录可写即可），Windows 上替换失败会回滚，差异随 M6 平台评估处理 |
-| I8 | 覆盖率阈值：`src/totk_frontend` 的语句覆盖率（AST 统计；多行语句按一条计）≥ 90%，用 `python tools/coverage_check.py` 测量（仅标准库） | M1 退出标准之一 |
+| I8 | 覆盖率阈值：`src/totk_frontend` 的语句覆盖率（AST 统计；多行语句按一条计）≥ 90%，用 `python tools/coverage_check.py` 测量（仅标准库） | M1 退出标准之一；依赖显示环境的 `gui_app.py` 不计入阈值（其入口、探测与回退提示在 `gui.py` 中仍被统计），原因见第 17 节 |
 | I9 | 校验结果模型：`Issue(severity, code, message, keys, suggestion)`；“错误/警告/提示”对应 `settings.md` 第 8 节的三级 | 校验只读，不自动改文件 |
 | I10 | 模式键 `bind_*` 在注册表中按模式登记（P0、只读、由 F1 菜单写入）；`bind_*` 只匹配文档与公开示例枚举的按键名（`[performance]` 的 `bind_skip` 不是绑定键）；未知键一律保留但不展示为可编辑 | 对应第 11 节风险处置 |
 
@@ -146,9 +146,12 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 | `install` | `FindingLevel`、`InstallFinding`、`install_findings`、`format_install_report`、`VersionDetection`、`detect_version` | 缺失项可解释；版本识别尽力而为（失败返回未知，不猜测） |
 | `versions` | `KNOWN_VERSIONS`、`VERSION_NOTES`、`get_version_note`、`key_supported_in`、`unsupported_keys`、`describe_version` | 1.1.0/1.2.1/1.4.3 的能力差异与版本限定键说明 |
 | `cli` | `main`、`build_parser`、`CliError`、退出码常量 | `python -m totk_frontend` 入口；不依赖 GUI |
+| `session` | `EditingSession`、`PendingChange` | GUI 的无头状态层：待保存修改、暂存文档、保存与预设暂存 |
+| `gui` | `tkinter_available`、`build_parser`、`main`、`NO_TK_MESSAGE` | 入口与无 tkinter 回退；不导入 tkinter 也可测试 |
+| `gui_app` | `run(tk, args)` | tkinter 窗口实现；依赖显示环境，不计入无头覆盖率 |
 
 验证命令：`python -m unittest discover -s tests -v`、`python -m compileall src`、`python tools/coverage_check.py`
-（语句覆盖率阈值 90%，M1 验收时为 99.07%，M2 时为 98.65%，M3 时为 98.94%，M5 检测/版本部分为 99.05%）。M2 的 `presets` 只能使用注册表中的键，`doctor` 复用
+（语句覆盖率阈值 90%，M1 验收时为 99.07%，M2 时为 98.65%，M3 时为 98.94%，M5 检测/版本部分为 99.05%，M4 时为 98.78%）。M2 的 `presets` 只能使用注册表中的键，`doctor` 复用
 `validate` 的稳定规则码（`rule.*`、`value.*`）。
 
 ## 14. M2 实现决定（记录）
@@ -184,3 +187,16 @@ M1 的目标是“不启动 GUI 也能安全读写 `totk.ini`”。以下约定�
 | L3 | 版本识别只读 `totk-install.json`，在字段名属于版本类、值形如 `主.次.修订` 时采用 | 上游安装记录格式尚未核对，识别失败返回未知；不猜测、不推断 |
 | L4 | 版本知识集中在 `versions.py`：能力说明来自 `design.md` 第 8 节与 `settings.md` 的版本标注 | `menu_cursor`、`fov` 仅 1.4.3；1.1.0 鼠标为摇杆模拟 |
 | L5 | 首次引导页在 M5-T2 实现：CLI 用 `format_install_report`，GUI 复用同一文本 | 引导只提示，不代跑安装器、不下载任何内容 |
+
+## 17. M4 实现决定（记录）
+
+| 编号 | 决定 | 说明 |
+|---|---|---|
+| M1 | 窗口用 `tkinter`/`ttk`，实现放在 `gui_app.py`；`gui.py` 只做参数解析、tkinter 探测与无 tkinter 回退 | 无 tkinter 时导入、测试与 CLI 都不受影响 |
+| M2 | 状态层 `session.EditingSession` 与控件分离：修改先进待保存状态，保存时才 `write_ini` | 无头可测；“未保存修改”可精确判断，可整体放弃 |
+| M3 | 页面由注册表驱动：每节一个标签页，控件按 `ValueType` 生成，标签/生效时机/范围来自 `Setting` | 新增键无需改 UI 代码（M4 退出标准） |
+| M4 | 设置项标注“立即生效/需重启”（`Setting.effect_label`）；P2 项在标签后加“（高级）” | 与 `settings.md` 的暴露级别一致 |
+| M5 | 保存前用 `session.errors()` 做整份校验；`bind_*` 只读、由游戏内 F1 菜单管理 | 与 CLI 结果一致 |
+| M6 | 关闭窗口或切换安装目录时，若有未保存修改先确认 | 避免误丢改动 |
+| M7 | 无 tkinter 时 `main` 返回 1 并提示 CLI 命令；有 tkinter 但无显示时捕获 `TclError` 给出同样提示 | 实机验收前无法在本开发机验证窗口 |
+| M8 | `gui_app.py` 从无头覆盖率统计中排除，原因与范围记录在 I8 | 窗口代码无法在无头环境执行 |
