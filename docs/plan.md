@@ -19,7 +19,7 @@
 | M2 | 预设系统与 doctor 诊断 | 已完成 | M1 |
 | M3 | CLI：detect/list/get/set/preset/doctor/launch/log | 已完成 | M2 |
 | M4 | GUI：tkinter 窗口与各设置页 | 未开始 | M3 |
-| M5 | 安装检测与首次引导（只检测与提示，不代跑安装器） | 未开始 | M3 |
+| M5 | 安装检测与首次引导（只检测与提示，不代跑安装器） | 进行中 | M3 |
 | M6 | 打包与发布准备（Win/Linux、许可证、发布检查单） | 未开始 | M4、M5 |
 
 ## 3. 里程碑详情
