@@ -17,7 +17,7 @@
 | M0 | 仓库脚手架、文档体系、跟踪、git 跟踪 | 已完成 | — |
 | M1 | 核心库：ini 解析/写入、设置模型、校验、单元测试 | 已完成 | M0 |
 | M2 | 预设系统与 doctor 诊断 | 已完成 | M1 |
-| M3 | CLI：detect/list/get/set/preset/doctor/launch/log | 未开始 | M2 |
+| M3 | CLI：detect/list/get/set/preset/doctor/launch/log | 进行中 | M2 |
 | M4 | GUI：tkinter 窗口与各设置页 | 未开始 | M3 |
 | M5 | 安装检测与首次引导（只检测与提示，不代跑安装器） | 未开始 | M3 |
 | M6 | 打包与发布准备（Win/Linux、许可证、发布检查单） | 未开始 | M4、M5 |

@@ -19,7 +19,7 @@
 | M0 | `DONE` | 全部 M0 任务 `DONE`，初始提交已推送 |
 | M1 | `DONE` | M0 完成；独立审查修正（`M1-T6`）已完成 |
 | M2 | `DONE` | M1 完成；全部 M2 任务 `DONE` |
-| M3 | `TODO` | M2 完成 |
+| M3 | `DOING` | M2 完成 |
 | M4 | `TODO` | M3 完成 |
 | M5 | `TODO` | M3 完成（可与 M4 并行，但写作用域不得重叠） |
 | M6 | `TODO` | M4、M5 完成 |
@@ -59,10 +59,10 @@
 
 | ID | 任务 | 状态 | 产物 | 验收 |
 |---|---|---|---|---|
-| M3-T1 | 命令框架与 `detect` | `TODO` | `cli.py`、`__main__.py` | `--help` 可用 |
-| M3-T2 | `list/get/set/unset` | `TODO` | 同上 | 读写结果正确 |
-| M3-T3 | `preset/apply/backup/restore` | `TODO` | 同上 | 回滚可用 |
-| M3-T4 | `launch/log/version` | `TODO` | 同上 | 不启动游戏也能测 |
+| M3-T1 | 命令框架与 `detect` | `DOING` | `cli.py`、`__main__.py` | `--help` 可用 |
+| M3-T2 | `list/get/set/unset` | `DOING` | 同上 | 读写结果正确 |
+| M3-T3 | `preset/apply/backup/restore` | `DOING` | 同上 | 回滚可用 |
+| M3-T4 | `launch/log/version` | `DOING` | 同上 | 不启动游戏也能测 |
 
 ### M4 GUI
 
